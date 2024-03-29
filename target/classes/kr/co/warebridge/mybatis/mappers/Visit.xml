@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.inquiry.dao.VisitDAO">
+
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+					<choose>
+						<when test="simpleCondition.searchType eq 'sub'">
+							INSTR(VISIT_SUBJECT, #{simpleCondition.searchWord}) > 0
+						</when>
+						<when test="simpleCondition.searchType eq 'con'">
+							INSTR(VISIT_CONTENTS, #{simpleCondition.searchWord}) > 0
+						</when>
+						<otherwise>
+							INSTR(VISIT_SUBJECT, #{simpleCondition.searchWord}) > 0
+							OR							
+							INSTR(VISIT_CONTENTS, #{simpleCondition.searchWord}) > 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	
+	<select id="selectTotalRecord" parameterType="PaginationInfo">
+		SELECT COUNT(*)
+		FROM VISIT_REQUEST
+		where cmp_id = #{cmpId}
+		<include refid="searchFrag"></include>
+	</select>
+	
+	
+	<select id="selectOne" parameterType="String" resultType="VisitVO">
+		SELECT * FROM VISIT_REQUEST
+		WHERE VISIT_ID = #{ID}
+	</select>
+	
+	
+	<select id="selectList" parameterType="PaginationInfo" resultType="VisitVO">
+		SELECT B.*
+		FROM(
+		   SELECT ROWNUM RNUM, A.*
+		   FROM(
+		      SELECT 
+		        *
+		      FROM VISIT_REQUEST
+		      where cmp_id = #{cmpId}
+		      <include refid="searchFrag"></include>
+		      ORDER BY REQUEST_DATE DESC
+		   ) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	
+	<insert id="insertVisit" parameterType="VisitVO">
+		INSERT INTO visit_request (
+		    VISIT_ID,
+		    REQUEST_DATE,
+		    VISIT_SUBJECT,
+		    VISIT_STATUS,
+		    CMP_ID,
+		    VISIT_CONTENTS,
+		    VISIT_DAT,
+		    VISIT_ANSWER,
+		    VISIT_ANSWER_WRITER,
+		    VISIT_ANSWER_DAT
+		) VALUES (
+		      VISIT_SEQ.nextval
+			, SYSDATE
+			, #{visitSubject,jdbcType=VARCHAR}
+			, '대기'
+			, #{cmpId,jdbcType=VARCHAR}
+			, #{visitContents,jdbcType=VARCHAR}
+			, #{visitDat,jdbcType=TIMESTAMP}
+			, #{visitAnswer,jdbcType=VARCHAR}
+			, #{visitAnswerWriter,jdbcType=VARCHAR}
+			, #{visitAnswerDat,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	
+	
+	<update id="updateVisit" parameterType="VisitVO">
+		UPDATE VISIT_REQUEST
+		SET
+			 request_date = SYSDATE
+		    ,visit_subject = #{visitSubject,jdbcType=VARCHAR}
+		    ,visit_contents = #{visitContents,jdbcType=VARCHAR}
+		    ,visit_dat = #{visitDat,jdbcType=TIMESTAMP}
+		WHERE
+	        visit_id = #{visitId,jdbcType=VARCHAR}
+	</update>
+	
+	
+	
+	
+	<delete id="deleteVisit" parameterType="String">
+		DELETE FROM VISIT_REQUEST
+		WHERE
+        VISIT_ID = #{ID}				
+	</delete>
+	
+</mapper>

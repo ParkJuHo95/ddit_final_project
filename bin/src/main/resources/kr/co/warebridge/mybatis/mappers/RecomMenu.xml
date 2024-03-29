@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.menu.dao.RecomMenuDAO">
+
+	 <select id="selectRecomMenu" parameterType="map" resultType="RecomMenuVO">
+        SELECT 
+            A.*, MENU.M_NAME
+        FROM 
+            (SELECT * FROM RECOM_MENU) A
+        JOIN MENU ON A.M_ID = MENU.M_ID
+        WHERE
+            EMP_NO = #{empNo}
+        AND
+            CMP_ID = #{empCmpId}
+        AND
+            YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')
+<!-- 		YMD = TRUNC(SYSDATE) -->
+    </select>
+
+</mapper>

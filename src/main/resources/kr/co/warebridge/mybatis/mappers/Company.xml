@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.company.dao.CompanyDAO">
+
+	<select id="selectCompany" parameterType="String" resultType="CompanyVO">
+		SELECT
+		    CMP_ID
+		  , CMP_EMP_CHARGERID
+		  , CMP_PASS
+		  , CMP_INIT_PASS
+		  , CMP_LOGO_PATH
+		  , CMP_FAVICON
+		  , CMP_WEB_TITLE
+		  , CMP_NM
+		  , CMP_URL
+		  , CMP_CEO
+		  , CMP_NO
+		  , CMP_ADDR
+		  , CMP_INDUSTRY
+		  , CMP_TELNO
+		  , CMP_MAIL
+		  , CMP_STATUS
+		  , CMP_BSNSLCNSPATH
+		  , CMP_CPTL
+		FROM
+		    COMPANY
+		WHERE
+			CMP_ID = #{cmpId}
+	</select>
+	
+	<update id="updateCompany" parameterType="CompanyVO">
+		UPDATE 
+			COMPANY
+		SET
+		    CMP_MAIL = #{cmpMail}
+		    ,CMP_TELNO = #{cmpTelno}
+		    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cmpFavicon)">
+	    		,CMP_FAVICON = #{cmpFavicon}
+		    </if> 
+		    ,CMP_WEB_TITLE = #{cmpWebTitle}
+		    ,CMP_EMP_CHARGERID = #{cmpEmpChargerid}
+		    
+		WHERE
+			CMP_ID = #{cmpId}
+	</update>
+	
+	<update id="updateInitialPw" parameterType="CompanyVO">
+		UPDATE 
+			COMPANY
+		SET
+			CMP_INIT_PASS = #{cmpInitPass}
+		WHERE
+			CMP_ID = #{cmpId}
+	</update>
+</mapper>

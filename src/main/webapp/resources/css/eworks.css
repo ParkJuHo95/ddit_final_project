@@ -1,0 +1,140 @@
+@charset "UTF-8";
+
+
+
+/* newDoc */
+.snctInfoTable{
+	background: white; 
+	border: 0px solid black; 
+	border-image: none; 
+	width: 100%;
+	color: black; 
+	font-family: malgun gothic, dotum, arial, tahoma; 
+	font-size: 12px; 
+	border-collapse: collapse;
+	
+}
+.snctFormName{
+	Padding: 3px; 
+	border: 0px solid black; 
+	border-image: none; 
+	width: 300px;
+	height: 90px; 
+	text-align: center; 
+	font-size: 22px; 
+	font-weight: bold; 
+	vertical-align: middle;
+}
+
+.snctIntro{
+	padding: 0px; 
+	border: 0px currentColor; 
+	border-image: none; 
+	width: 300px;
+}
+.snctWriter{
+	background: white; 
+	margin: 0px; 
+	border: 1px solid black; 
+	border-image: none; 
+	color: black; 
+	font-family: malgun gothic, dotum, arial, tahoma; 
+	font-size: 12px;
+}
+.ths{
+	background: rgb(221, 221, 221); 
+	padding: 3px;
+	 border: 1px solid black; 
+	 border-image: none; 
+	 width: 100px; 
+	 height: 22px; 
+	 text-align: center; 
+	 font-weight: bold; 
+	 vertical-align: middle;
+}
+.tds{
+	padding: 3px; 
+	border: 1px solid black; 
+	border-image: none; 
+	width: 200px; 
+	height: 22px; 
+	text-align: left; 
+	vertical-align: middle;
+}
+.price{
+	text-align: right;
+}
+.snctLine {
+	display: flex;
+    float: right;
+    padding: 0px; 
+    border-collapse: collapse; /* 테이블 셀의 경계를 병합합니다. */
+    text-align: center; 
+}
+.snctLine td, .snctLine th {
+    border: 1px solid black; /* 각 셀에 테두리를 추가합니다. */
+}
+
+.docBody td, .snctLine th {
+    border: 1px solid black; /* 각 셀에 테두리를 추가합니다. */
+}
+
+.custom-table {
+    border-collapse: collapse;
+    width: 800px;
+    margin-top: 10px;
+}
+
+.header-cell {
+    background: rgb(221, 221, 221);
+    border: 1px solid black;
+    color: rgb(0, 0, 0);
+    font-size: 14px;
+    height: 25px;
+    padding: 5px;
+    text-align: center;
+    vertical-align: middle;
+    width: 150px;
+}
+
+.data-cell {
+    background: rgb(255, 255, 255);
+    border: 1px solid black;
+    color: rgb(0, 0, 0);
+    font-size: 14px;
+    padding: 5px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* docDetail */
+table {
+    width: 100%; /* 테이블 전체 너비를 100%로 설정 */
+}
+tbody {
+	width: 100%;
+}
+.snctRow{
+	width: 30px !important;
+    height: 130px;
+    font-size: 15px;
+    align-items: center; /* 세로 중앙 정렬 */
+    text-align: center; /* 가운데 정렬 */
+}
+.snctLineHeader {
+	height: 30px; 
+    width: 100px !important;
+}
+.snctLineBody {
+	height: 80px;
+	width: 100px !important;
+}
+.snctLineBody img {
+    height: 40px; /* 이미지 높이 설정 */
+    width: 40px;
+   
+}
+.snctLineFooter {
+	height: 30px;
+	width: 100px !important;
+}

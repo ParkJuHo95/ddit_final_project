@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.address.dao.AdbkDAO">
+
+	<insert id="insert" parameterType="PrsnladbkVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="pabNo"> <!-- primaryKey를 생성해주는 쿼리, insert보다 먼저 실행한다-->
+			SELECT LPAD(NVL(to_number(SUBSTR(MAX(PAB_NO), 0, 4)), 0) + 1, 4, '0')
+			FROM PRSNLADBK
+			WHERE PAB_EMP_NO = #{pabEmpNo}
+			AND PAB_CMP_ID = #{pabCmpId}
+		</selectKey> 
+		INSERT INTO PRSNLADBK(
+			PAB_NO
+		    , PAB_EMP_NO
+		    , PAB_CMP_ID
+		    , PAB_NAME
+		    , PAB_PICPATH
+		    , PAB_MAIL
+		    , PAB_MOBILE
+		    , PAB_GROUP
+		    , PAB_COMPANY
+		    , PAB_DPTMNT
+		    , PAB_POSITION
+		    , PAB_TASK
+		    , PAB_CMPTEL
+		    , PAB_CMPADDR
+		    , PAB_BIRTHDAY
+		    , PAB_HOMETEL
+		    , PAB_CMPFAX
+		    , PAB_REMARK
+		)VALUES(
+			#{pabNo}
+			,#{pabEmpNo}
+			,#{pabCmpId}
+			,#{pabName}
+			,#{pabPicpath}
+			,#{pabMail}
+			,#{pabMobile}
+			,#{pabGroup}
+			,#{pabCompany}
+			,#{pabDptmnt}
+			,#{pabPosition}
+			,#{pabTask}
+			,#{pabCmptel}
+			,#{pabCmpaddr}
+			,#{pabBirthday}
+			,#{pabHometel}
+			,#{pabCmpfax}
+			,#{pabRemark}
+		)
+	</insert>
+	
+	<select id="selectList" parameterType="PaginationInfo" resultType="PrsnladbkVO">
+		SELECT
+	    pab_no,
+	    pab_name,
+<!-- 	    pab_picpath, -->
+	    pab_mail,
+	    pab_mobile,
+	    pab_group,
+	    pab_company,
+	    pab_dptmnt,
+	    pab_position,
+	    pab_task,
+	    pab_cmptel,
+	    pab_cmpaddr,
+	    pab_birthday,
+	    pab_hometel,
+	    pab_cmpfax,
+	    pab_remark
+	FROM
+	    prsnladbk
+	WHERE
+	    pab_emp_no = #{detailCondition.pabEmpNo}
+	    AND
+	    pab_cmp_id = #{detailCondition.pabCmpId}
+	</select>
+</mapper>

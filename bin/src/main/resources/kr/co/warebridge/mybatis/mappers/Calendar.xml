@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.calendar.dao.CalendarDAO">
+	<select id="selectUserScheduleList" parameterType="String" resultType="ScheduleVO">
+		SELECT * FROM SCHEDULE
+		WHERE EMP_NO = #{a} AND SCHEDULE_TYPE = 'E'
+	</select>
+	
+	
+	<select id="selectTeam1ScheduleList" parameterType="String" resultType="ScheduleVO">
+		SELECT * FROM SCHEDULE
+		WHERE EMP_DPT = #{a} AND SCHEDULE_TYPE = 'D1'
+	</select>
+
+	<select id="selectTeam2ScheduleList" parameterType="String" resultType="ScheduleVO">
+		SELECT * FROM SCHEDULE
+		WHERE EMP_DPT = #{a} AND SCHEDULE_TYPE = 'D2'
+	</select>
+	
+	<select id="selectUserSchedule" resultType="ScheduleVO">
+		SELECT
+		    SCHEDULE_ID,
+		    SCHEDULE_NAME,
+		    SCHEDULE_START_DAT,
+		    SCHEDULE_END_DAT,
+		    SCHEDULE_CONTENTS,
+		    SCHEDULE_TYPE,
+		    ALARM_ALTERNATIVE,
+		    SCHEDULE_PARTICIPANT,
+		    EMP_NO,
+		    EMP_DPT,
+		    EMP_CMP_ID,
+		    REPETITION_ID
+		FROM
+		    SCHEDULE
+		WHERE SCHEDULE_ID = #{scheduleId}	
+	</select>
+	
+	
+	<select id="selectCompanyScheduleList" parameterType="String" resultType="ScheduleVO">
+		SELECT * FROM SCHEDULE
+		WHERE EMP_CMP_ID = #{a} AND SCHEDULE_TYPE = 'C'
+	</select>
+	
+	<insert id="insertSchedule" parameterType="ScheduleVO">
+		INSERT INTO schedule (
+		    schedule_id,
+		    schedule_name,
+		    schedule_start_dat,
+		    schedule_end_dat,
+		    schedule_contents,
+		    schedule_type,
+		    alarm_alternative,
+		    schedule_participant,
+		    emp_no,
+		    emp_dpt,
+		    emp_cmp_id,
+		    repetition_id
+		) VALUES (
+			  SCHEDULE_SEQ.NEXTVAL
+			, #{scheduleName,jdbcType=VARCHAR}
+			, #{scheduleStartDat,jdbcType=TIMESTAMP}
+			, #{scheduleEndDat,jdbcType=TIMESTAMP}
+			, #{scheduleContents,jdbcType=VARCHAR}
+			, #{scheduleType,jdbcType=VARCHAR}
+			, #{alarmAlternative,jdbcType=CHAR}
+			, #{scheduleParticipant,jdbcType=VARCHAR}
+			, #{empNo,jdbcType=VARCHAR}
+			, #{empDpt,jdbcType=VARCHAR}
+			, #{empCmpId,jdbcType=VARCHAR}
+			, #{repetitionId,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="insertRepetition" parameterType="ScheduleVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="repetitionId">
+			SELECT REPETITION_SEQ.nextval
+			FROM dual
+		</selectKey>
+		INSERT INTO repetition (
+		    repetition_id,
+		    repetition_period,
+		    repetition_range
+		) VALUES (
+		      #{repetitionId,jdbcType=VARCHAR}
+		    , #{repetitionTerm,jdbcType=NUMERIC}
+		    , #{repetitionEndDate,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	
+	<update id="updateSchedule" parameterType="ScheduleVO">
+		UPDATE schedule
+		SET
+		      SCHEDULE_NAME = #{scheduleName,jdbcType=VARCHAR}
+		     ,SCHEDULE_START_DAT = #{scheduleStartDat,jdbcType=TIMESTAMP}
+		     ,SCHEDULE_END_DAT = #{scheduleEndDat,jdbcType=TIMESTAMP}
+		     ,SCHEDULE_CONTENTS = #{scheduleContents,jdbcType=VARCHAR}
+		     ,SCHEDULE_TYPE = #{scheduleType,jdbcType=VARCHAR}
+		     ,ALARM_ALTERNATIVE = #{alarmAlternative,jdbcType=CHAR}
+		     ,SCHEDULE_PARTICIPANT = #{scheduleParticipant,jdbcType=VARCHAR}
+		     ,EMP_DPT = #{empDpt,jdbcType=VARCHAR}
+		WHERE
+		    SCHEDULE_ID = #{scheduleId,jdbcType=VARCHAR}
+	</update>
+	
+	
+	<delete id="deleteSchedule" parameterType="String">
+	    DELETE 
+	    FROM 
+	    	SCHEDULE
+		WHERE
+	        SCHEDULE_ID = #{scheduleId}
+	</delete>
+	
+	<select id="selectTodayList" parameterType="EmployeeVO" resultType="ScheduleVO">
+		SELECT
+		    SCHEDULE_ID,
+		    SCHEDULE_NAME,
+		    SCHEDULE_START_DAT,
+		    SCHEDULE_END_DAT,
+		    SCHEDULE_CONTENTS,
+		    SCHEDULE_TYPE,
+		    ALARM_ALTERNATIVE,
+		    SCHEDULE_PARTICIPANT,
+		    EMP_NO,
+		    EMP_DPT,
+		    EMP_CMP_ID,
+		    REPETITION_ID
+		FROM
+		    SCHEDULE
+		WHERE 
+		    (EMP_NO = #{empNo} OR EMP_DPT = #{empDptId1} OR EMP_DPT = #{empDptId2} OR EMP_CMP_ID = #{empCmpId}) AND (SYSDATE BETWEEN SCHEDULE_START_DAT AND SCHEDULE_END_DAT)
+	</select>
+	
+	
+</mapper>

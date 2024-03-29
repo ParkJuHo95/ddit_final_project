@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.mybatis.mappers.CompanyBoardMapper">
+
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+					<choose>
+						<when test="simpleCondition.searchType eq 'sub'">
+							INSTR(CB_NAME, #{simpleCondition.searchWord}) > 0
+						</when>
+						<when test="simpleCondition.searchType eq 'con'">
+							INSTR(CB_CONTENT, #{simpleCondition.searchWord}) > 0
+						</when>
+						<otherwise>
+							INSTR(CB_NAME, #{simpleCondition.searchWord}) > 0
+							OR							
+							INSTR(CB_CONTENT, #{simpleCondition.searchWord}) > 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<select id="seqNext" resultType="CompanyBoardVO">
+			SELECT company_board_SEQ.NEXTVAL cb_seq 
+			FROM DUAL
+	</select>
+
+	<insert id="insert" parameterType="CompanyBoardVO">
+		<!-- <selectKey keyProperty="cbNo" resultType="int" order="BEFORE">
+			SELECT company_board_SEQ.NEXTVAL
+			FROM DUAL
+		</selectKey> -->
+		INSERT INTO company_board (
+		    cb_no
+		    , cb_name
+		    , cb_path
+		    , cb_emp_no
+		    , cb_dat
+		    , cb_cmp_id
+		    , cb_content
+		) VALUES (
+			#{cbSeq,jdbcType=NUMERIC}
+			, #{cbName,jdbcType=VARCHAR}
+			, #{cbPath,jdbcType=VARCHAR}
+			, #{cbEmpNo,jdbcType=VARCHAR}
+			, sysdate
+			, #{cbCmpId,jdbcType=VARCHAR}
+		    , #{cbContent,jdbcType=CLOB}
+		)
+	</insert>
+	<resultMap type="CompanyBoardVO" id="companyboardMap" autoMapping="true">
+		<id property="cbNo" column="CB_NO" />
+		<collection property="attatchList" ofType="AtchmnflVO">
+			<id property="atchNo" column="ATCH_NO" />
+			<result property="atchName" column="ATCH_NAME"/>
+			<result property="atchSize" column="ATCH_SIZE"/>
+			<result property="atchFancysize" column="ATCH_FANCYSIZE"/>
+		</collection>											
+	</resultMap>
+	<select id="select" parameterType="int" resultMap="companyboardMap">
+		SELECT 
+			CB_NO
+			, CB_NAME 
+			, CB_EMP_NO
+			, CB_DAT
+			, CB_VIEWS
+			, CB_LIKES
+			, CB_NOTICE
+			, CB_CMP_ID
+			, CB_CONTENT
+			, EMP_NAME
+			, ATCH_NO
+			, ATCH_NAME
+			, ATCH_SIZE
+			, ATCH_FANCYSIZE
+		FROM COMPANY_BOARD
+		LEFT OUTER JOIN ATCHMNFL ON CB_NO = ATCH_CB_NO
+		JOIN EMPLOYEE ON CB_EMP_NO = EMP_NO
+		WHERE CB_NO = #{cbNo}
+	</select>
+
+	<select id="selectTotalRecord" parameterType="PaginationInfo" resultType="int">
+		SELECT COUNT(*)
+		FROM COMPANY_BOARD
+		<include refid="searchFrag" />
+	</select>
+	<select id="selectList" parameterType="PaginationInfo" resultMap="companyboardMap">
+		SELECT B.*
+		FROM(
+		    SELECT A.*, ROWNUM RNUM
+		    FROM(
+		        SELECT 
+		            CB_NO
+		            , CB_NAME
+		            , CB_EMP_NO
+		            , CB_DAT
+		            , CB_VIEWS
+		            , CB_LIKES
+		            , CB_NOTICE
+		            , CB_CMP_ID
+		            , CB_CONTENT
+		            , EMP_NAME
+		            , EMP_JOBPOSITION
+		            , ATCH_NO
+		            , (SELECT COUNT(*) FROM "COMMENT" WHERE CMT_CB_NO=CB_NO) AS recnt
+		        FROM COMPANY_BOARD
+		        JOIN EMPLOYEE ON CB_EMP_NO = EMP_NO
+		        LEFT OUTER JOIN ATCHMNFL ON CB_NO = ATCH_CB_NO
+		        <include refid="searchFrag" />
+		        ORDER BY 
+		        	CASE WHEN CB_NOTICE = 'Y' THEN 0 ELSE 1 END, 
+                    CB_NO DESC 
+		    )A
+		)B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	<update id="boardView" parameterType="int">
+		UPDATE COMPANY_BOARD
+		SET
+			CB_VIEWS = CB_VIEWS+1
+		WHERE CB_NO = #{cbNo}
+	</update>
+	<update id="update" parameterType="CompanyBoardVO">
+		UPDATE COMPANY_BOARD
+		SET
+		    CB_NAME = #{cbName,jdbcType=VARCHAR}
+		    , CB_CONTENT = #{cbContent,jdbcType=VARCHAR}
+		    , CB_NOTICE = #{cbNotice,jdbcType=VARCHAR}
+		WHERE
+		    CB_NO = #{cbNo}
+	</update>
+	<delete id="delete" parameterType="int">
+		DELETE FROM COMPANY_BOARD
+		WHERE CB_NO = #{cbNo}
+	</delete>
+	
+	
+	<select id="selectNoticeList" parameterType="EmployeeVO" resultType="CompanyBoardVO">
+		
+		SELECT
+		    CB_NO,
+		    CB_NAME,
+		    CB_PATH,
+		    CB_EMP_NO,
+		    CB_DAT,
+		    CB_VIEWS,
+		    CB_LIKES,
+		    CB_NOTICE,
+		    CB_CMP_ID,
+		    CB_CONTENT,
+            EMP_NAME
+		FROM
+		    COMPANY_BOARD join EMPLOYEE on (CB_EMP_NO = EMP_NO)
+		WHERE
+   		<![CDATA[
+		    CB_NOTICE = 'Y' AND ROWNUM < 4 AND CB_CMP_ID = #{empCmpId}
+	    ]]>
+		ORDER BY CB_DAT DESC
+		
+	</select>
+</mapper>

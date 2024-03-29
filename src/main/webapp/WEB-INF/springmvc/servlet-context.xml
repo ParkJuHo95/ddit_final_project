@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.3.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+	
+<!-- 	HandlerMapping : 컨트롤러(POJO) 객체와 핸들러 메소드를 검색하고 해당 정보로 map을 형성 -->
+<!-- 	HandlerAdapter : 핸들러 메소드의 호출자 -->
+<!-- 		- HandlerMethodArgumentResolver : 핸들러 메소드의 인자를 해결하기 위한 전략 -->
+<!-- 		- HandlerMethodReturnValueHandler : 핸들러 메소드 내에서 반환되는 객체를 처리하는 전략 -->
+<!-- 	ViewResolver : 핸들러 메소드 내에서 결정된 뷰에 대한 정보(logical view name)을 해결하는 전략 -->
+<!-- 	<mvc:annotation-driven validator="validator" /> -->
+	
+	<bean id="objectMapper" class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean">
+		<property name="featuresToDisable">
+			<array>
+				<util:constant static-field="com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS"/>
+			</array>		
+		</property>
+	</bean>
+	
+<!-- 	<bean id="chatHandler" class="kr.co.warebridge.chat.controller.ChatWebsocketHandler"/> -->
+
+<!-- 	<websocket:handlers> -->
+<!-- 		<websocket:mapping handler="chatHandler" path="/chat"/> -->
+<!-- 		<websocket:handshake-interceptors> -->
+<!--         interceptor: http통신에서 req, resp 가로채는 역할 handshake-interceptors: 요청 
+             관련 데이터 중 HttpSession(로그인 정보, 채팅방번호) 을 가로채서 WebSocketSession에 넣어주는 역할 --> 
+<!--         <bean class="org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor" /> -->
+<!--     	</websocket:handshake-interceptors> -->
+<!-- 		<websocket:sockjs/> -->
+<!-- 	</websocket:handlers> -->
+	
+	<mvc:annotation-driven validator="validator">
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" 
+				p:objectMapper-ref="objectMapper"
+			/>
+		</mvc:message-converters>
+		<mvc:argument-resolvers>
+			<bean class="org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver" />
+		</mvc:argument-resolvers>
+	</mvc:annotation-driven>
+	
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="kr.co.warebridge.advice.F5" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource" 
+		p:basenames="kr.co.warebridge.message.ErrorMessages"
+	/>
+	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"
+		p:validationMessageSource-ref="messageSource"
+	/>
+	
+	<context:component-scan base-package="kr.co.warebridge" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+	<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" id="jsonView"></bean>
+
+<!-- 		BeanNameViewResolver 등록 : 뷰네임과 매칭되는 빈의 id가 있다면 해당 빈을 뷰레이어로 사용함, 없다면 다음 resolver로 넘김-->
+<!-- 	<mvc:bean-name/> -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver"
+		p:order="1"
+	/>
+	<mvc:tiles-configurer>
+		<mvc:definitions location="/WEB-INF/tiles/*-tiles.xml"/>
+	</mvc:tiles-configurer>
+	<mvc:view-resolvers order="2">
+<!-- 		negotiation은 같은 resolvers안에 있는 resolver를 모두 가져가버린다 다른 resolver가 합쳐지면서 순서는 사라짐 -->
+		<mvc:content-negotiation>
+			<mvc:default-views>
+				<ref bean="jsonView"/>
+			</mvc:default-views>
+		</mvc:content-negotiation>
+<!-- 			InternalResourceViewResolver 등록 : html / jsp 와 같은 웹 리소스를 뷰레이어로 사용함 -->
+		<mvc:tiles/>
+		<mvc:jsp prefix="/WEB-INF/views/" suffix=".jsp"/>
+	</mvc:view-resolvers>
+	
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver"
+		p:cookieName="localeCookie"
+		p:cookiePath="/"
+		p:cookieMaxAge="#{60*60*24*3}"
+	/>
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"
+				p:paramName="lang"
+			/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	
+<!-- 	MultipartResolver : multipart 요청을 파싱해서 문자 기반의 파트는 parameter로 만들고  -->
+<!-- 						file 기반의 파트는 multipartFile 타입 객체로 캡슐화함 -->
+<!-- 						MultipartHttpServletRequest wrapper request를 생성함 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"
+	/>	
+	<mvc:resources location="/resources/" mapping="/resources/**" cache-period="0"></mvc:resources>
+	<mvc:resources location="/css/" mapping="/css/**" cache-period="0"></mvc:resources>
+</beans>

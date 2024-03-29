@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.eworks.dao.SnctstatusDAO">
+	<insert id="insert" parameterType="SnctstatusVO">
+		INSERT INTO snctstatus (
+		    ss_sdc_id
+		   , ss_sl_id
+		   , ss_sdt_order
+		   , ss_emp_no
+<!-- 		   , ss_type -->
+<!-- 		   , ss_snctdat -->
+		   , ss_status
+<!-- 		   , ss_remark  -->
+		) VALUES (
+		    #{ssSdcId, jdbcType=VARCHAR}
+		    , #{ssSlId, jdbcType=VARCHAR}
+		    , #{ssSdtOrder, jdbcType=NUMERIC}
+		    , #{ssEmpNo, jdbcType=VARCHAR}
+<!-- 		    , #{ssType, jdbcType=VARCHAR} -->
+<!-- 		    , #{ssSnctdat, jdbcType=TIMESTAMP(6)}  -->
+		    , #{ssStatus, jdbcType=NUMERIC}
+<!-- 		    , #{ssRemark, jdbcType=VARCHAR} -->
+		)
+	</insert>
+	
+	<select id="selectForAtrz" parameterType="SnctstatusVO" resultType="SnctstatusVO">
+		SELECT
+			ss_sdc_id
+		    , ss_sl_id
+		    , ss_sdt_order
+		    , ss_emp_no
+			, ss_type  -- F인지 확인해야함
+			-- , ss_snctdat
+			, ss_status
+			-- , ss_remark 
+		FROM
+		    snctstatus
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+		AND
+			ss_emp_no = #{ssEmpNo}
+	</select>
+	
+	<update id="approve" parameterType="SnctstatusVO">
+		UPDATE snctstatus
+		SET
+			ss_type       = #{ssType, jdbcType=CHAR} -- 
+			, ss_status   = 2 --결재완료, 승인반려 표시하지않음
+			, ss_snctdat  = current_timestamp
+			, ss_remark   = #{ssRemark, jdbcType=VARCHAR}
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+		AND
+			ss_emp_no = #{ssEmpNo}
+<!-- 		<selectKey resultType="SnctstatusVO" keyProperty="ssSdtOrder" order="AFTER"> -->
+<!-- 		Select -->
+<!-- 			ss_sdc_id -->
+<!-- 		    , ss_sl_id -->
+<!-- 		    , ss_sdt_order -->
+<!-- 		    , ss_emp_no -->
+<!-- 			, ss_status -->
+<!-- 		FROM -->
+<!-- 			snctstatus -->
+<!-- 		WHERE -->
+<!-- 			ss_sdc_id = #{ssSdcId} -->
+<!-- 			ss_sdt_order =  -->
+<!-- 		</selectKey> -->
+	</update>
+	
+	<select id="selectNextAtrz" parameterType="SnctstatusVO" resultType="SnctstatusVO">
+		SELECT
+			ss_sdc_id
+		    , ss_sl_id
+		    , ss_sdt_order
+		    , ss_emp_no
+			<!--	, ss_type 아직없음-->
+			<!-- 	, ss_snctdat -->
+			<!-- 	, ss_status -->
+			<!-- 	, ss_remark -->
+		FROM
+		    snctstatus
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+			AND
+			ss_sdt_order = (#{ssSdtOrder} + 1)
+	</select>
+	
+	<update id="setNextAtrz" parameterType="SnctstatusVO">
+		UPDATE snctstatus
+		SET
+			ss_status   = 0 --현재 결재 순서로 바꿔줌
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+		AND
+			ss_emp_no = #{ssEmpNo}
+	</update>
+	<update id="setNextAtrzForArbit" parameterType="SnctstatusVO">
+		UPDATE snctstatus
+		SET
+			ss_status   = 2 --결재완료로 바꿔줌
+			--, ss_type = 'C' --이후 결재자 결재코드 없음...
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+			AND
+			ss_sdt_order &gt; #{ssSdtOrder}
+	</update>
+	<update id="setNextAtrzN" parameterType="SnctstatusVO">
+		DELETE 
+		FROM snctstatus
+		WHERE
+			ss_sdc_id = #{ssSdcId}
+			AND
+			ss_sdt_order &gt; #{ssSdtOrder}
+	</update>
+	
+	<update id="setBeforeAtrzY" parameterType="SnctstatusVO">
+    	UPDATE snctstatus
+    	SET 
+    		ss_type = 'G'
+    	WHERE 
+    		ss_sdt_order &lt; #{ssSdtOrder}
+    		AND 
+    		ss_status &lt; 2
+	</update>
+	
+	<update id="setBeforeAtrzN" parameterType="SnctstatusVO">
+    	UPDATE snctstatus
+    	SET 
+    		ss_type = 'G'
+    		, ss_status = 2
+    	WHERE 
+    		ss_sdt_order &lt; #{ssSdtOrder}
+    		AND 
+    		ss_status &lt; 2
+	</update>
+	
+</mapper>

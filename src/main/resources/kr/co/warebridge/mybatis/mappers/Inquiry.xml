@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.inquiry.dao.InquiryDAO">
+	
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+					<choose>
+						<when test="simpleCondition.searchType eq 'sub'">
+							INSTR(INQRY_SUBJECT, #{simpleCondition.searchWord}) > 0
+						</when>
+						<when test="simpleCondition.searchType eq 'con'">
+							INSTR(INQRY_CONTENTS, #{simpleCondition.searchWord}) > 0
+						</when>
+						<otherwise>
+							INSTR(INQRY_SUBJECT, #{simpleCondition.searchWord}) > 0
+							OR							
+							INSTR(INQRY_CONTENTS, #{simpleCondition.searchWord}) > 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	
+	
+	<select id="selectTotalRecord" parameterType="PaginationInfo">
+		SELECT COUNT(*)
+		FROM INQUIRY
+		where cmp_id = #{cmpId}
+		<include refid="searchFrag"></include>
+	</select>
+	
+	
+	<select id="selectOne" parameterType="String" resultType="InquiryVO">
+		SELECT * FROM INQUIRY
+		WHERE inqry_id = #{id}
+	</select>
+	
+	
+	<select id="selectList" parameterType="PaginationInfo" resultType="InquiryVO">
+		SELECT B.*
+		FROM(
+		   SELECT ROWNUM RNUM, A.*
+		   FROM(
+		      SELECT 
+		        *
+		      FROM INQUIRY
+		      where cmp_id = #{cmpId}
+		      <include refid="searchFrag"></include>
+		      ORDER BY INQRY_DAT DESC
+		   ) A
+		) B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	
+	<insert id="insertInquiry" parameterType="InquiryVO">
+		INSERT INTO INQUIRY (
+		    INQRY_ID,
+		    CMP_ID,
+		    INQRY_DAT,
+		    INQRY_SUBJECT,
+		    INQRY_CONTENTS,
+		    ERROR_AT,
+		    INQRY_ANSWER,
+		    INQRY_ANSWER_DAT,
+		    INQRY_ANSWER_WRITER
+		) VALUES (
+			INQUIRY_SEQ.nextval
+			, #{cmpId,jdbcType=VARCHAR}
+			, SYSDATE
+			, #{inqrySubject,jdbcType=VARCHAR}
+			, #{inqryContents,jdbcType=VARCHAR}
+			, #{errorAt,jdbcType=CHAR}
+			, #{inqryAnswer,jdbcType=VARCHAR}
+			, #{inqryAnswerDat,jdbcType=TIMESTAMP}
+			, #{inqryAnswerWriter,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	
+	
+	<update id="updateInquiry" parameterType="InquiryVO">
+		UPDATE inquiry
+		SET
+		    inqry_dat = SYSDATE
+		    ,inqry_subject = #{inqrySubject,jdbcType=VARCHAR}
+		    ,inqry_contents = #{inqryContents,jdbcType=VARCHAR}
+		    ,error_at = #{errorAt,jdbcType=CHAR}
+		WHERE
+		     inqry_id = #{inqryId,jdbcType=VARCHAR}
+	</update>
+	
+	
+	
+	<delete id="deleteInquiry" parameterType="String">
+		DELETE FROM INQUIRY
+		WHERE
+        INQRY_ID = #{ID}
+	</delete>
+	
+	
+	<select id="selectHomeList" parameterType="String" resultType="InquiryVO">
+		SELECT B.*
+		FROM(
+		   SELECT ROWNUM RNUM, A.*
+		   FROM(
+		      SELECT 
+		        *
+		      FROM INQUIRY
+		      where cmp_id = #{cmpId}
+		    
+		      ORDER BY INQRY_DAT DESC
+		   ) A
+		) B
+		<![CDATA[
+        where rnum <= '3'
+		]]>
+	</select>
+	
+</mapper>

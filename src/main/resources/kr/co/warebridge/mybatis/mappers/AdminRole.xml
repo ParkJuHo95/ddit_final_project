@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.authorization.dao.AdminRoleDAO">
+
+	
+	<select id="selectAdminList"  parameterType="PaginationInfo" resultType="AdminVO">
+		SELECT
+		    ROWNUM RNUM
+		    ,A.*
+		FROM(
+		    SELECT
+		        A.ADM_NO
+		        ,A.ADM_DAT
+		        ,A.ADM_TO
+		        ,B.EMP_NAME AS ADM_TO_NAME
+		        ,A.ADM_FROM
+		        ,C.EMP_NAME AS ADM_FROM_NAME
+		        ,B.EMP_CMP_ID
+		        ,DPT_NAME
+		        ,B.EMP_DPT_ID1
+		        ,B.EMP_DPT_ID2
+		        ,B.EMP_STATUS
+		        ,B.EMP_ROLE
+		        ,B.EMP_MOBILE
+		        ,B.EMP_CMPTELNO
+		        ,B.EMP_JOBDUTY
+		        ,B.EMP_JOBPOSITION
+		    FROM ADMIN_LOG A 
+		    INNER JOIN EMPLOYEE B ON ( A.ADM_TO = B.EMP_NO) 
+		    INNER JOIN EMPLOYEE C ON(A.ADM_FROM = C.EMP_NO)
+		    LEFT JOIN DEPARTMENT ON(B.EMP_DPT_ID1 = DPT_ID)
+		    <include refid="searchFrag"></include>
+		    ORDER BY A.ADM_NO
+		)A
+
+	</select>
+	
+	
+	<!-- searchFrag로 detailCondition 넣음, 회사명, 부서명으로 조회 가능 -->
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empCmpId)">
+					AND B.EMP_CMP_ID = #{detailCondition.empCmpId} 
+				</if>
+
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.admToName)">
+					AND INSTR(ADM_TO_NAME, #{detailCondition.admToName} ) > 0
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.dptName)">
+					AND INSTR(DPT_NAME, #{detailCondition.dptName} ) > 0
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empJobposition)">
+					AND INSTR(B.EMP_JOBPOSITION, #{detailCondition.empJobposition} ) > 0
+				</if>
+<!-- 				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empDptId1)"> -->
+<!-- 					AND INSTR(EMP_DPT_ID1, #{detailCondition.empDptId1}) > 0 -->
+<!-- 				</if> -->
+<!-- 				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empDptId2)"> -->
+<!-- 					AND INSTR(EMP_DPT_ID2, #{detailCondition.empDptId2}) > 0  -->
+<!-- 				</if> -->
+			</if>
+		</trim>
+	</sql>
+	
+	
+	<select id="selectTotalRecord" parameterType="PaginationInfo">
+		SELECT COUNT(*)
+		FROM ADMIN_LOG
+		<include refid="admList"></include>
+	</select>
+		<!-- searchFrag로 detailCondition 넣음, 회사명, 부서명으로 조회 가능 -->
+	<sql id="admList">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empCmpId)">
+					ADM_CMP = #{detailCondition.empCmpId} 
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<insert id="insertAdmin" parameterType="AdminVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="admNo">
+			SELECT  
+			    LPAD(NVL(TO_NUMBER(MAX(ADM_NO)), 0) + 1, 8, '0')
+			FROM ADMIN_LOG
+		</selectKey>
+			INSERT INTO ADMIN_LOG(
+				ADM_NO
+			    , ADM_FROM
+			    , ADM_CMP
+			    , ADM_TO
+			    , ADM_DAT
+			)VALUES(
+				#{admNo}
+				,#{admFrom}
+				,#{empCmpId}
+				,#{admTo}
+				,SYSDATE
+			)
+	</insert>
+	
+	<update id="updateAdmin" parameterType="AdminVO">
+		UPDATE
+			EMPLOYEE
+		SET
+			EMP_ROLE = 'ROLE_ADMIN'
+		WHERE
+			EMP_NO = #{empNo}
+	</update>
+</mapper>

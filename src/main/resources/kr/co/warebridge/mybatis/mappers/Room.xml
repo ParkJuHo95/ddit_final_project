@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.rental.dao.RoomDAO">
+	
+
+    <select id="selectRoomList" parameterType="RoomVO" resultType="RoomVO">
+      SELECT
+		    room_code,
+		    room_name,
+		    room_site,
+		    room_detail,
+		    room_able,
+		    emp_cmp_id
+		FROM
+		   room
+		where emp_cmp_id = #{empCmpId}  
+		order by room_code
+    </select>
+    <select id="selectRoom" resultType="RoomVO" parameterType="String">
+    SELECT
+	    room_code,
+	    room_name,
+	    room_site,
+	    room_detail,
+	   room_able,
+	    emp_cmp_id
+	FROM
+	    room
+	 where 
+	 room_code = #{roomCode}
+    </select>
+  
+ <insert id="createRoom" parameterType="RoomVO" >
+ <selectKey keyProperty="roomAble" resultType="string" order="BEFORE"> 
+ select '이용 가능' from dual
+ </selectKey>
+	INSERT INTO room (
+	    room_code,
+	    room_name,
+	    room_site,
+	    room_detail,
+	    room_able,
+	    emp_cmp_id
+	) VALUES (
+	    #{roomCode},
+	    #{roomName},
+	    #{roomSite},
+	    #{roomDetail},
+	     #{roomAble},
+	    'dreaminfosystem'
+	)
+	</insert>
+	
+	<update id="updateRoom" parameterType="RoomVO" >
+	UPDATE room
+	SET
+	    room_name = #{roomName},
+	    room_site =  #{roomSite},
+	    room_detail = #{roomDetail},
+	    room_able = #{roomAble}
+	WHERE
+	        room_code = #{roomCode}
+	
+	</update>
+	<delete id="deleteRoom" parameterType="String" >
+		 DELETE FROM room
+		WHERE
+        room_code =  #{roomCode}
+	</delete>
+
+</mapper>

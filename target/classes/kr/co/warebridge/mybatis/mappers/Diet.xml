@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.menu.dao.DietDAO">
+
+	<resultMap id="dietMap" type="DietVO" autoMapping="true">
+	    <id property="empNo" column="EMP_NO" />
+	    <id property="cmpId" column="EMP_CMP_ID" />
+	    <id property="ymd" column="YMD" />
+	    <result property="title" column="TITLE" />
+	    <result property="start" column="start" />
+	    <result property="end" column="end" />
+<!-- 	    <association property="menu"  javaType="MenuVO"> -->
+<!-- 	    	<result property="mId" column="M_ID"/> -->
+<!-- 			<result property="mName" column="M_NAME"/> -->
+<!-- 	    </association> -->
+	</resultMap>
+	
+	<select id="selectDietTable" parameterType="map" resultMap="dietMap">
+		SELECT 
+		    B.*
+		    , MENU.M_NAME as title
+		FROM
+		    (
+		        SELECT
+		            A.EMP_NO
+		            , A.EMP_CMP_ID
+		            , DIET.YMD
+		            , TO_DATE(DIET.YMD, 'YYYY-MM-DD HH24:MI:SS')  as "start"
+		            , TO_DATE(DIET.YMD, 'YYYY-MM-DD HH24:MI:SS') as "end"
+		            , DIET.M_ID
+		        FROM
+		            (SELECT
+		                TEN.EMP_NO,
+		                TEN.EMP_CMP_ID,
+		                TEN.CNT
+		                
+		            FROM     
+		            (
+		               SELECT 
+		                    EMP_NO,
+		                    EMP_CMP_ID,
+		                    (   
+		                        SELECT COUNT(*)
+		                        FROM DIET
+		                        WHERE
+		                        EMP_NO = E.EMP_NO
+		                        AND CMP_ID = E.EMP_CMP_ID
+		                        
+		                    ) CNT
+		                FROM
+		                    EMPLOYEE E
+		            ) TEN
+		            
+		            WHERE
+		                TEN.CNT > 10) A
+		        INNER JOIN 
+		            DIET 
+		        ON 
+		            (A.EMP_NO = DIET.EMP_NO AND A.EMP_CMP_ID = DIET.CMP_ID)
+		    )B
+		INNER JOIN
+		    MENU
+		ON(B.M_ID = MENU.M_ID)
+		WHERE
+		    B.EMP_NO = #{empNo}
+		AND
+		    B.EMP_CMP_ID = #{cmpId}
+		ORDER BY B.YMD ASC
+	</select>
+	
+	<insert id="insertDiet" parameterType="DietVO">
+		INSERT INTO DIET (
+			YMD
+			, EMP_NO
+			, CMP_ID
+			, M_ID
+		) VALUES (
+			TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,#{empNo, jdbcType=VARCHAR}
+			,'dreaminfosystem'
+			,#{MId, jdbcType=NUMERIC}
+		)
+	</insert>
+</mapper>

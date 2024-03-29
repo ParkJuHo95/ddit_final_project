@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.mybatis.mappers.TeamBoardMapper">
+
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+					<choose>
+						<when test="simpleCondition.searchType eq 'sub'">
+							INSTR(TB_NAME, #{simpleCondition.searchWord}) > 0
+						</when>
+						<when test="simpleCondition.searchType eq 'con'">
+							INSTR(TB_CONTENT, #{simpleCondition.searchWord}) > 0
+						</when>
+						<otherwise>
+							INSTR(TB_NAME, #{simpleCondition.searchWord}) > 0
+							OR							
+							INSTR(TB_CONTENT, #{simpleCondition.searchWord}) > 0
+						</otherwise>
+					</choose>
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<select id="seqNext" resultType="TeamBoardVO">
+			SELECT team_board_SEQ.NEXTVAL tb_seq 
+			FROM DUAL
+	</select>
+
+	<insert id="insert" parameterType="TeamBoardVO">
+		<!-- <selectKey keyProperty="TBNo" resultType="int" order="BEFORE">
+			SELECT team_board_SEQ.NEXTVAL
+			FROM DUAL
+		</selectKey> -->
+		INSERT INTO team_board (
+		    TB_no
+		    , TB_name
+		    , TB_emp_no
+		    , TB_dat
+		    , TB_content
+		    , TB_DPT_ID
+		) VALUES (
+			#{tbSeq,jdbcType=NUMERIC}
+			, #{tbName,jdbcType=VARCHAR}
+			, #{tbEmpNo,jdbcType=VARCHAR}
+			, sysdate
+		    , #{tbContent,jdbcType=VARCHAR}
+		    , #{tbDptId,jdbcType=VARCHAR}
+		)
+	</insert>
+	<resultMap type="teamBoardVO" id="teamboardMap" autoMapping="true">
+		<id property="tbNo" column="TB_NO" />
+		<collection property="attatchList" ofType="AtchmnflVO">
+			<id property="atchNo" column="ATCH_NO" />
+			<result property="atchName" column="ATCH_NAME"/>
+			<result property="atchSize" column="ATCH_SIZE"/>
+			<result property="atchFancysize" column="ATCH_FANCYSIZE"/>
+		</collection>											
+	</resultMap>
+	<select id="select" parameterType="int" resultMap="teamboardMap">
+		SELECT 
+			TB_NO, TB_NAME, TB_EMP_NO
+			, TB_DAT, TB_VIEWS
+			, TB_NOTICE, TB_CONTENT
+			, EMP_NAME, ATCH_NO, ATCH_NAME
+			, ATCH_SIZE, ATCH_FANCYSIZE
+		FROM team_BOARD
+		LEFT OUTER JOIN ATCHMNFL ON TB_NO = ATCH_TB_NO
+		JOIN EMPLOYEE ON TB_EMP_NO = EMP_NO
+		WHERE TB_NO = #{tbNo}
+	</select>
+
+	<select id="selectTotalRecord" parameterType="PaginationInfo" resultType="int">
+		SELECT COUNT(*)
+		FROM team_BOARD
+		<include refid="searchFrag" />
+	</select>
+	<select id="selectList" parameterType="PaginationInfo" resultMap="teamboardMap">
+		SELECT B.*
+		FROM(
+		    SELECT A.*, ROWNUM RNUM
+		    FROM(
+		        SELECT 
+		            TB_NO
+		            , TB_NAME
+		            , TB_EMP_NO
+		            , TB_DAT
+		            , TB_VIEWS
+		            , TB_NOTICE
+		            , TB_CONTENT
+		            , EMP_NAME
+		            , EMP_JOBPOSITION
+		            , ATCH_NO
+		            , (SELECT COUNT(*) FROM "COMMENT" WHERE CMT_TB_NO=TB_NO)AS recnt
+		        FROM TEAM_BOARD
+		        JOIN EMPLOYEE ON TB_EMP_NO = EMP_NO
+		        LEFT OUTER JOIN ATCHMNFL ON TB_NO = ATCH_TB_NO
+		        <include refid="searchFrag" />
+		        ORDER BY 
+		        	CASE WHEN TB_NOTICE = 'Y' THEN 0 ELSE 1 END, 
+                    TB_NO DESC 
+		    )A
+		)B
+		<![CDATA[
+		WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	<update id="boardView" parameterType="int">
+		UPDATE team_BOARD
+		SET
+			TB_VIEWS = TB_VIEWS+1
+		WHERE TB_NO = #{tbNo}
+	</update>
+	<update id="update" parameterType="teamBoardVO">
+		UPDATE team_BOARD
+		SET
+		    TB_NAME = #{tbName,jdbcType=VARCHAR}
+		    , TB_CONTENT = #{tbContent,jdbcType=VARCHAR}
+		    , TB_NOTICE = #{tbNotice,jdbcType=VARCHAR}
+		WHERE
+		    TB_NO = #{tbNo}
+	</update>
+	<delete id="delete" parameterType="int">
+		DELETE FROM TEAM_BOARD
+		WHERE TB_NO = #{tbNo}
+	</delete>
+</mapper>

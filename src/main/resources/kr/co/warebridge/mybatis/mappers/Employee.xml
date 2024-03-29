@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.employee.dao.EmployeeDAO">
+	<resultMap type="EmployeeVO" id="employeeMap" autoMapping="true">
+		<id property="empNo" column="EMP_NO"/>
+		<association property="department" javaType="DepartmentVO" autoMapping="true">
+			<id property="dptId" column="DPT_ID"/>
+		</association>	
+		<collection property="empRole" ofType="string">
+			<result column="EMP_ROLE"/>
+		</collection>
+	</resultMap>
+	
+	<!-- 조직도, 공용주소록에 쓰이는 EMPListMap -->
+	<resultMap type="EmployeeVO" id="employeeMapWithDpt" autoMapping="true">
+		<id property="empNo" column="EMP_NO"/>
+		<association property="department" javaType="DepartmentVO" autoMapping="true">
+			<id property="dptId" column="DPT_ID"/>
+		</association>		
+	</resultMap>
+	
+	<select id="selectTotalRecord" parameterType="PaginationInfo">
+		SELECT COUNT(*)
+		FROM EMPLOYEE
+		<include refid="searchFrag"></include>
+	</select>
+	
+	<select id="selectEmployee" resultMap="employeeMapWithDpt" parameterType="String">
+		SELECT
+            EMP_NO
+		  , EMP_CMP_ID
+		  , EMP_NAME
+		  , EMP_PICPATH
+		  , EMP_PASS
+		  , EMP_DPT_ID1
+		  , EMP_DPT_ID2
+		  , EMP_STATUS
+		  , EMP_ROLE
+		  , EMP_MOBILE
+		  , EMP_HOMETELNO
+		  , EMP_CMPTELNO
+		  , EMP_MAIL
+		  , EMP_FAX
+		  , EMP_ADDR
+		  , EMP_WORKINGPLACE
+		  , EMP_BIRTHDAY
+		  , EMP_REMARKS
+		  , EMP_RRNO
+		  , EMP_JOBDUTY
+		  , EMP_JOBPOSITION
+		  , EMP_JOBRANK
+		  , EMP_GEN
+		  , EMP_INTERESTS
+          , DEPARTMENT.DPT_ID
+          , DEPARTMENT.DPT_PARENTDPTID
+          , DEPARTMENT.DPT_ORDER
+          , DEPARTMENT.DPT_LOCALEXT
+          , DEPARTMENT.DPT_NAME
+          , DEPARTMENT.DPT_HEAD
+		FROM EMPLOYEE
+		LEFT JOIN DEPARTMENT ON EMPLOYEE.EMP_DPT_ID1 = DEPARTMENT.DPT_ID
+        WHERE EMPLOYEE.EMP_NO = #{empNo}
+	</select>
+
+	<select id="selectEmployeeForLogin" resultMap="employeeMap" parameterType="String">
+		SELECT
+          EMP_NO
+		  , EMP_CMP_ID
+		  , EMP_NAME
+		  , EMP_PICPATH
+		  , EMP_PASS
+		  , EMP_DPT_ID1
+		  , EMP_DPT_ID2
+		  , EMP_STATUS
+		  , EMP_ROLE
+		  , EMP_MOBILE
+		  , EMP_HOMETELNO
+		  , EMP_CMPTELNO
+		  , EMP_MAIL
+		  , EMP_FAX
+		  , EMP_ADDR
+		  , EMP_WORKINGPLACE
+		  , EMP_BIRTHDAY
+		  , EMP_REMARKS
+		  , EMP_RRNO
+		  , EMP_JOBDUTY
+		  , EMP_JOBPOSITION
+		  , EMP_JOBRANK
+		  , EMP_GEN
+		  , EMP_INTERESTS
+		  , DEPARTMENT.DPT_ID
+		  , DEPARTMENT.DPT_NAME
+		FROM
+		EMPLOYEE
+		LEFT JOIN DEPARTMENT ON EMPLOYEE.EMP_DPT_ID1 = DEPARTMENT.DPT_ID
+		WHERE
+		EMP_NO = #{String}
+	</select>
+		
+	<update id="updateEmployee" parameterType="EmployeeVO">
+		UPDATE 
+			EMPLOYEE
+		SET
+			
+		    EMP_MAIL = #{empMail}
+		    ,EMP_MOBILE = #{empMobile}
+		    ,EMP_STATUS = #{empStatus}
+		    ,EMP_CMPTELNO = #{empCmptelno}
+		    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(empPicpath)">
+	    		,EMP_PICPATH = #{empPicpath}
+		    </if> 
+		    
+		WHERE
+			EMP_NO = #{empNo}
+	</update>
+	
+	<update id="updateEmpPassword" parameterType="EmployeeVO">
+		UPDATE 
+			EMPLOYEE
+		SET
+		    EMP_PASS = #{empPass}
+		WHERE
+			EMP_NO = #{empNo}
+	</update>
+		
+<!-- 	<delete id="deleteEmployee" parameterType="String"> -->
+<!-- 		UPDATE EMPLOYEE -->
+<!-- 		SET -->
+<!-- 		EMP_STATUS = '0' -->
+<!-- 		WHERE EMP_NO = #{empNo} -->
+<!-- 	</delete> -->
+	<select id="selectEmployeeList" resultMap="employeeMapWithDpt" parameterType="PaginationInfo">
+		<if test="currentPage > 0">
+			SELECT NUMBERED.*
+			FROM(
+			    SELECT 
+			        ROWNUM RNUM
+			        , ORDERED.*
+			    FROM(
+			    </if>
+		        SELECT
+		            EMP_NO
+		            ,EMP_CMP_ID
+		            ,EMP_NAME
+		            ,EMP_PICPATH
+		            ,EMP_PASS
+		            ,EMP_DPT_ID1
+		            ,EMP_DPT_ID2
+		            ,EMP_STATUS
+		            ,EMP_ROLE
+		            ,EMP_MOBILE
+		            ,EMP_HOMETELNO
+		            ,EMP_CMPTELNO
+		            ,EMP_MAIL
+		            ,EMP_FAX
+		            ,EMP_ADDR
+		            ,EMP_WORKINGPLACE
+		            ,EMP_BIRTHDAY
+		            ,EMP_REMARKS
+		            ,EMP_RRNO
+		            ,EMP_JOBDUTY
+		            ,EMP_JOBPOSITION
+		            ,EMP_JOBRANK
+		            ,EMP_GEN
+		            ,EMP_INTERESTS
+		            ,DPT_ID
+		            ,DPT_PARENTDPTID
+		            ,DPT_ORDER
+		            ,DPT_LOCALEXT
+		            ,DPT_NAME
+		            ,DPT_HEAD
+		            ,DPT_OFFICE
+		        FROM EMPLOYEE
+		        LEFT JOIN DEPARTMENT ON (EMP_DPT_ID1= DPT_ID)
+		        <include refid="searchFrag"></include>
+		        ORDER BY EMP_NAME
+		<if test="currentPage > 0">
+		    )ORDERED
+		)NUMBERED
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+		</if>
+	</select>
+	
+	<!-- searchFrag로 detailCondition 넣음, 회사명, 부서명으로 조회 가능 -->
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empCmpId)">
+					AND EMP_CMP_ID = #{detailCondition.empCmpId} 
+				</if>
+<!-- 				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empName)"> -->
+<!-- 					AND INSTR(EMP_NAME, #{detailCondition.empName} ) > 0 -->
+<!-- 				</if> -->
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.admTo)">
+					AND EMP_NO NOT IN (SELECT ADM_TO FROM ADMIN_LOG) 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.dptName)">
+					AND INSTR(DPT_NAME, #{detailCondition.dptName} ) > 0
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.prsName)">
+					AND INSTR(EMP_JOBPOSITION, #{detailCondition.prsName} ) > 0
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empDptId1)">
+					AND INSTR(EMP_DPT_ID1, #{detailCondition.empDptId1}) > 0
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empDptId2)">
+					AND INSTR(EMP_DPT_ID2, #{detailCondition.empDptId2}) > 0 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.empRole)">
+					AND EMP_ROLE != 'ROLE_ADMIN' 
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	
+	<insert id="insertEmployee" parameterType="EmployeeVO">
+		INSERT INTO EMPLOYEE(
+			EMP_NO
+    		, EMP_CMP_ID
+		    , EMP_NAME
+		    , EMP_PICPATH
+		    , EMP_PASS
+		    , EMP_DPT_ID1
+		    , EMP_DPT_ID2
+		    , EMP_STATUS
+<!-- 		    , EMP_ROLE -->
+		    , EMP_MOBILE
+		    , EMP_HOMETELNO
+		    , EMP_CMPTELNO
+		    , EMP_MAIL
+		    , EMP_FAX
+		    , EMP_ADDR
+		    , EMP_WORKINGPLACE
+		    , EMP_BIRTHDAY
+		    , EMP_REMARKS
+		    , EMP_RRNO
+		    , EMP_JOBDUTY
+		    , EMP_JOBPOSITION
+		    , EMP_JOBRANK
+		    , EMP_GEN
+		    , EMP_INTERESTS
+		) VALUES (
+			#{empNo}
+			,#{empCmpId}
+			,#{empName}
+			,#{empPicpath}
+			,#{empPass}
+			,#{empDptId1}
+			,#{empDptId2}
+			,'1'
+<!-- 			,#{empRole} -->
+			,#{empMobile}
+			,#{empHometelno}
+			,#{empCmptelno}
+			,#{empMail}
+			,#{empFax}
+			,#{empAddr}
+			,#{empWorkingplace}
+			,#{empBirthday}
+			,#{empRemarks}
+			,#{empRrno}
+			,#{empJobduty}
+			,#{empJobposition}
+			,#{empJobank}
+			,#{empGen}
+			,#{empInterests}
+		)
+	</insert>	
+	
+	
+	<select id="selectEmpNoByTeam" parameterType="string" resultType="String">
+		SELECT
+		    emp_no
+		FROM
+		    employee
+		WHERE
+		    EMP_DPT_ID1 = #{string} OR  EMP_DPT_ID2 = #{string}
+	</select>
+	
+	
+	<select id="selectEmpNoByCompany" resultType="String">
+		SELECT
+		    emp_no
+		FROM
+		    employee
+		WHERE
+		    EMP_CMP_ID = #{string}
+	</select>
+	
+</mapper>

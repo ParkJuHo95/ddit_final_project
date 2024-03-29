@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+	<settings>
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+		<setting name="jdbcTypeForNull" value="NULL"/>
+	</settings>
+	<typeAliases>
+		<package name="kr.co.warebridge.vo" />
+		<package name="kr.co.warebridge.common.paging" />
+	</typeAliases>	
+<!-- 	<mappers> -->
+<!-- 		<mapper resource="kr/or/ddit/mybatis/mappers/Member.xml"/> -->
+<!-- 		<mapper resource="kr/or/ddit/mybatis/mappers/Property.xml"/> -->
+<!-- 		<mapper resource="kr/or/ddit/mybatis/mappers/Prod.xml"/> -->
+<!-- 		<mapper resource="kr/or/ddit/mybatis/mappers/Others.xml"/> -->
+<!-- 		<mapper resource="kr/or/ddit/mybatis/mappers/Buyer.xml"/> -->
+<!-- 	</mappers> -->
+</configuration>

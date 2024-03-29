@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.mail.dao.MailDAO">
+		<!--메일쓰기 -->
+		<insert id="createGetMail" parameterType="MailVO">
+		<selectKey keyProperty="mailCode" resultType="string" order="BEFORE">
+			select mail_seq.NEXTVAL from dual
+		</selectKey>
+		INSERT INTO MAILRECEIVER (
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		mail_date,
+		mail_NUM,
+		mail_VIP,
+		mail_read
+		) VALUES (
+		#{mailCode},
+		#{mailSender},
+		#{mailTitle},
+		#{mailDetail},
+		#{mailGetter},
+		SYSDATE,
+		'0',
+		'N',
+		'X'
+		)
+	</insert>
+	<insert id="createMail" parameterType="MailVO">
+		<selectKey keyProperty="mailCode" resultType="string" order="BEFORE">
+			select send_seq.NEXTVAL from dual
+		</selectKey>
+		INSERT INTO mail (
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		mail_date,
+		mail_NUM,
+		mail_VIP
+		) VALUES (
+		#{mailCode},
+		#{mailSender},
+		#{mailTitle},
+		#{mailDetail},
+		#{mailGetter},
+		SYSDATE,
+		'0',
+		'N'
+		)
+	</insert>
+	<!--임시 저장 메일 쓰기 -->
+	<insert id="creatSaveMail" parameterType="MailVO">
+		<selectKey keyProperty="mailCode" resultType="string" order="BEFORE">
+			select send_seq.NEXTVAL from dual
+		</selectKey>
+		INSERT INTO mail (
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		mail_date,
+		mail_NUM,
+		mail_VIP
+		) VALUES (
+		#{mailCode},
+		#{mailSender},
+		#{mailTitle},
+		#{mailDetail},
+		#{mailGetter},
+		SYSDATE,
+		'1',
+		#{mailVip}
+		)
+	</insert>
+	<resultMap type="MailFileVO" id="mfVOMap">
+		<result column="mail_code" property="mailCode" />
+		<result column="file_outname" property="fileOutname" />
+	</resultMap>
+	<resultMap type="MailVO" id="mailVOMap">
+		<result column="mail_code" property="mailCode" />
+		<result column="mail_sender" property="mailSender" />
+		<result column="mail_title" property="mailTitle" />
+		<result column="mail_detail" property="mailDetail" />
+		<result column="mail_getter" property="mailGetter" />
+		<result column="mail_refer" property="mailRefer" />
+		<result column="mail_date" property="mailDate" />
+		<result column="mail_num" property="mailNum" />
+		<result column="mail_vip" property="mailVip" />
+		<collection property="filesVO" javaType="list"
+			ofType="MailFileVO" autoMapping="true">
+			<id property="fileName" column="file_name" />
+		</collection>
+	</resultMap>
+	<!-- 받은 메일함 -->
+	<select id="selectGetMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT NUMBERED.*
+			FROM(
+			    SELECT 
+			        ROWNUM RNUM
+			        , ORDERED.*
+			    FROM(
+		SELECT
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date,
+		mail_VIP,
+		mail_read
+		FROM
+		MAILRECEIVER
+		Where mail_getter = #{detailCondition.mailGetter}
+		and mail_num ='0'
+		ORDER BY 
+		mail_Date DESC
+		 )ORDERED
+		)NUMBERED
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	<!-- 보낸 메일함 -->
+	<select id="selectSendMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT NUMBERED.*
+			FROM(
+			    SELECT 
+			        ROWNUM RNUM
+			        , ORDERED.*
+			    FROM(
+		SELECT
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date,
+		mail_VIP
+		FROM
+		mail
+		Where mail_sender = #{detailCondition.mailSender}
+		and mail_num ='0'
+		ORDER BY 
+		mail_Date DESC
+		 )ORDERED
+		)NUMBERED
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 메일 디테일 -->
+	<select id="selectMail" parameterType="string" resultMap="mailVOMap">
+		WITH files AS
+		(SELECT file_name,
+		file_path,
+		mail_code,
+		file_outname
+		FROM "FILE"
+		)
+		SELECT
+		mail.mail_code,
+		mail.mail_sender,
+		mail.mail_title,
+		mail.mail_detail,
+		mail.mail_getter,
+		mail.mail_date,
+		mail.mail_num,
+		mail.mail_VIP,
+		files.*
+		FROM
+		mail LEFT OUTER JOIN files ON (mail.mail_code = files.mail_code)
+		WHERE
+		mail.mail_code = #{mailCode}
+	</select>
+	<!-- 임시저장 메일함 -->
+	<select id="selectSaveMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date,
+		mail_VIP
+		FROM
+		mail
+		Where mail_sender = #{detailCondition.mailSender}
+		and mail_num ='1'
+		ORDER BY 
+		mail_Date DESC
+	</select>
+	<!-- 중요메일 -->
+	<select id="selectVipMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		TO_CHAR(mail_Date, 'YYYY-MM-DD HH24:MI') AS mail_Date,
+		mail_VIP
+		FROM
+		MAILRECEIVER
+		Where mail_getter = #{detailCondition.mailGetter}
+		and mail_vip = 'Y'
+		ORDER BY 
+		mail_Date DESC
+	</select>
+	<!-- 구글메일 -->
+	<select id="selectgoogleMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT
+			mail_code
+			, mail_sender
+			, mail_title
+			, mail_detail
+			, mail_getter
+			, TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date
+			, mail_VIP
+			, mail_num
+		FROM
+			MAIL
+		Where mail_getter = 'valnet0112@gmail.com'
+		and mail_num ='2'
+		ORDER BY 
+		mail_Date DESC
+	</select>
+	<!-- 스팸메일 -->
+	<select id="selectspamMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT
+			mail_code
+			, mail_sender
+			, mail_title
+			, mail_detail
+			, mail_getter
+			, TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date
+			, mail_VIP
+			, mail_num
+		FROM
+			MAIL
+		Where mail_getter = 'valnet0112@gmail.com'
+		and mail_num ='4'
+		ORDER BY 
+		mail_Date DESC
+	</select>
+	<!-- 휴지통 -->
+	<select id="selectBinMailList" parameterType="PaginationInfo" resultType="MailVO">
+		SELECT
+		mail_code,
+		mail_sender,
+		mail_title,
+		mail_detail,
+		mail_getter,
+		TO_CHAR(mail_Date, 'YY-MM-DD HH24:MI') AS mail_Date,
+		mail_VIP
+		FROM
+		MAILRECEIVER
+		Where (mail_sender = #{detailCondition.mailGetter} or mail_getter = #{detailCondition.mailGetter})
+		and mail_num = '3'
+		ORDER BY 
+		mail_Date DESC
+	</select>
+	<!-- 삭제 버튼 -->
+	<update id="goToBin" parameterType="string">
+	  	UPDATE mailreceiver
+		SET
+		    mail_num = 3
+		WHERE
+		  mail_code = #{mailCode}
+	</update>
+	<!-- 보낸 메일 삭제 -->
+	<update id="outMailgoToBin" parameterType="string">
+	  	UPDATE mail
+		SET
+		    mail_num = 3
+		WHERE
+		  mail_code = #{mailCode}
+	</update>
+	<!-- 메일 복구 -->
+	<update id="rollBack" parameterType="string">
+	  	UPDATE mailreceiver
+		SET
+		    mail_num = 0
+		WHERE
+		  mail_code = #{mailCode}
+	</update>
+	<select id="selectTotalRecord" parameterType="PaginationInfo" resultType="int">
+		SELECT COUNT(*) FROM MAILRECEIVER
+		where MAIL_GETTER = #{detailCondition.mailGetter}
+		
+	</select>
+	<select id="selectMailCnt" parameterType="PaginationInfo" resultType="int">
+		SELECT COUNT(*) FROM MAILRECEIVER
+		where MAIL_GETTER = #{detailCondition.mailGetter}
+		and mail_read = 'X'
+	</select>
+	<select id="selectTotalSentRecord" parameterType="PaginationInfo" resultType="int">
+    SELECT COUNT(*) FROM MAIL
+    WHERE MAIL_SENDER = #{detailCondition.mailSender}
+	</select>
+	 <!-- 중요메일 만들기 -->
+	 <update id="vipMail" parameterType="String">
+	 	UPDATE mailreceiver
+		SET
+		mail_vip = 'Y'
+		WHERE
+        mail_code = #{mailCode}
+	 </update>
+	 <!-- 메일 읽음 -->
+	 <update id="mailRead" parameterType="String">
+	 UPDATE mailreceiver
+		SET
+		mail_read = 'O'
+		WHERE
+        mail_code = #{mailCode}
+	 </update>
+	 <select id="selectGetMail" resultType="int">
+	 select count(*) from MAILRECEIVER
+		where mail_read = 'X';
+	 </select>
+</mapper>

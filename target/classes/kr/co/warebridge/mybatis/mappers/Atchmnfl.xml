@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.mybatis.mappers.AtchmnflMapper">
+	<select id="selectAttatch" parameterType="int" resultType="AtchmnflVO">
+		SELECT 
+			ATCH_NO, ATCH_CB_NO, ATCH_DPT_ID
+			, ATCH_NAME, ATCH_PATH, ATCH_SIZE
+			, ATCH_EXTENSION, ATCH_SAVENAME, ATCH_FANCYSIZE
+			, ATCH_DOWNLOAD, ATCH_MIME
+		FROM ATCHMNFL
+		WHERE ATCH_NO = #{atchNo}
+	</select>
+	<delete id="deleteAttatch">
+		DELETE FROM ATCHMNFL
+		WHERE ATCH_NO = #{atchNo}
+	</delete>
+	<insert id="insertAttatch" parameterType="AtchmnflVO">
+		<selectKey order="BEFORE" keyProperty="atchNo" resultType="int">
+			SELECT NVL(MAX(ATCH_NO), 0)+1
+			FROM ATCHMNFL
+		</selectKey>
+		INSERT INTO ATCHMNFL(
+			ATCH_NO
+			, ATCH_CB_NO
+			, ATCH_NAME
+			, ATCH_SAVENAME
+			, ATCH_MIME
+			, ATCH_SIZE
+			, ATCH_FANCYSIZE
+			, ATCH_DOWNLOAD
+		)VALUES(
+			#{atchNo, jdbcType=INTEGER}
+			, #{atchCbNo, jdbcType=INTEGER}
+			, #{atchName, jdbcType=VARCHAR}
+			, #{atchSavename, jdbcType=VARCHAR}
+			, #{atchMime, jdbcType=VARCHAR}
+			, #{atchSize, jdbcType=INTEGER}
+			, #{atchFancysize, jdbcType=VARCHAR}
+			, #{atchDownload, jdbcType=INTEGER}
+		)
+	</insert>
+</mapper>

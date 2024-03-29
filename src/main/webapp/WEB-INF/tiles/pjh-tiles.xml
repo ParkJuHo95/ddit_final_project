@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+	<definition name="loginParent" template="/WEB-INF/loginLayout.jsp">
+		<put-attribute name="title" value="Welcome to WareBridge!" />
+		<put-attribute name="preScript" value="/WEB-INF/includee/userPreScript.jsp"/>
+		<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+	</definition>
+
+	<definition name="userParent" template="/WEB-INF/layout.jsp">
+		<put-attribute name="title" value="Welcome to WareBridge!" />
+		<put-attribute name="preScript" value="/WEB-INF/includee/userPreScript.jsp"/>
+		<put-attribute name="sideMenu" value="/WEB-INF/includee/userSideMenu.jsp"/>
+		<put-attribute name="headerMenu" value="/WEB-INF/includee/userHeaderMenu.jsp"/>
+		<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+		<put-attribute name="chooseScript" value="/WEB-INF/includee/userScript.jsp"/>
+		<put-attribute name="footer" value="/WEB-INF/includee/footer.jsp"/>
+	</definition>
+
+	<definition name="adminParent" template="/WEB-INF/layout.jsp">
+		<put-attribute name="title" value="Welcome to WareBridge!" />
+		<put-attribute name="preScript" value="/WEB-INF/includee/adminPreScript.jsp"/>
+		<put-attribute name="sideMenu" value="/WEB-INF/includee/adminSideMenu.jsp"/>
+		<put-attribute name="headerMenu" value="/WEB-INF/includee/adminHeaderMenu.jsp"/>
+		<put-attribute name="postScript" value="/WEB-INF/includee/postScript.jsp"/>
+		<put-attribute name="chooseScript" value="/WEB-INF/includee/adminScript.jsp"/>
+		<put-attribute name="footer" value="/WEB-INF/includee/footer.jsp"/>
+	</definition>
+
+	<definition name="/user/nonesubside" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/nonesubside.jsp"/>
+	</definition>
+
+	<definition name="/admin/nonesubside" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/nonesubside.jsp"/>
+	</definition>
+	
+	<definition name="/login/*" extends="loginParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/login/{1}.jsp"/>
+	</definition>
+	
+	
+<!-- 	새로고침 -->
+<!-- 	user -->
+	
+	<definition name="/user/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/{1}.jsp"/>
+	</definition>
+	
+	<definition name="/user/calendar/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/calendar/calendar.jsp"/>
+	</definition>
+
+	<definition name="/user/mail/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/mail/inMail.jsp"/>
+	</definition>
+
+	<definition name="/user/eworks/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/eworks/00eworks.jsp"/>
+	</definition>
+
+	<definition name="/user/community/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/community/chat.jsp"/>
+	</definition>
+
+	<definition name="/user/community/*/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/community/chat.jsp"/>
+	</definition>
+
+	<definition name="/user/mypage/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/employee/mypage.jsp"/>
+	</definition>
+
+	<definition name="/user/board/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/board/boardSubSide.jsp"/>
+	</definition>
+
+	<definition name="/user/book/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/book/bookSub.jsp"/>
+	</definition>
+
+	<definition name="/user/address/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/address/00address.jsp"/>
+	</definition>
+	
+	<definition name="/user/*/*" extends="userParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/user/{1}/{2}.jsp"/>
+	</definition>
+
+
+<!-- admin -->
+
+	<definition name="/admin/inquiry/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/inquiry/inquiry.jsp"/>
+	</definition>
+
+	<definition name="/admin/subscribe/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/subscribe/subscribe.jsp"/>
+	</definition>
+
+	<definition name="/admin/organization/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/organization/organization.jsp"/>
+	</definition>
+
+	<definition name="/admin/security/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/security/security.jsp"/>
+	</definition>
+	
+
+	<definition name="/admin/menuManagement/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/menuManagement/menuManagement.jsp"/>
+	</definition>
+
+	<definition name="/admin/menuManagement/*/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/menuManagement/menuManagement.jsp"/>
+	</definition>
+	
+	<definition name="/admin/book/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/menuManagement/menuManagement.jsp"/>
+	</definition>
+
+	<definition name="/admin/book/*/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/menuManagement/menuManagement.jsp"/>
+	</definition>
+
+
+
+	<definition name="/admin/*/*" extends="adminParent">
+		<put-attribute name="contentPage" value="/WEB-INF/views/admin/{1}/{2}.jsp"/>
+	</definition>
+
+	
+</tiles-definitions>

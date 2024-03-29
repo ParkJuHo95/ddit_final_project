@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.admin.organization.dao.DepartmentSystemDAO">
+
+	<resultMap type="DepartmentVO" id="DptTree" autoMapping="true">
+		<id property="dptId" column="DPT_ID"/>
+		<collection property="childDptList" javaType="list" ofType="DepartmentVO">
+			<id property="dptId" column="C_DPT_ID"/>
+			<result property="dptParentdptid" column="C_DPT_PARENTDPTID"/>
+			<result property="dptOrder" column="C_DPT_ORDER"/>
+			<result property="dptLocalext" column="C_DPT_LOCALEXT"/>
+			<result property="dptName" column="C_DPT_NAME"/>
+			<result property="dptHead" column="C_DPT_HEAD"/>
+			<result property="dptCmpId" column="C_DPT_CMP_ID"/>
+			<collection property="childDptList" javaType="list" ofType="DepartmentVO">
+				<id property="dptId" column="CC_DPT_ID"/>
+				<result property="dptParentdptid" column="CC_DPT_PARENTDPTID"/>
+				<result property="dptOrder" column="CC_DPT_ORDER"/>
+				<result property="dptLocalext" column="CC_DPT_LOCALEXT"/>
+				<result property="dptName" column="CC_DPT_NAME"/>
+				<result property="dptHead" column="CC_DPT_HEAD"/>
+				<result property="dptCmpId" column="CC_DPT_CMP_ID"/>
+			</collection>
+		</collection>
+	</resultMap>
+
+	<resultMap type="DepartmentVO" id="lineTree" autoMapping="false">
+		<id property="dptId" column="DPT_ID"/>
+		<result property="dptParentdptid" column="DPT_PARENTDPTID"/>
+		<result property="dptOrder" column="DPT_ORDER"/>
+		<result property="dptLocalext" column="DPT_LOCALEXT"/>
+		<result property="dptName" column="DPT_NAME"/>
+		<result property="dptHead" column="DPT_HEAD"/>
+		<association property="emp" javaType="EmployeeVO" autoMapping="false">
+			<id property="empNo" column="EMP_NO"/>
+			<result property="empName" column="EMP_NAME"/>
+			<result property="empJobposition" column="EMP_JOBPOSITION"/>
+		</association>
+		<collection property="childDptList" javaType="list" ofType="DepartmentVO">
+			<id property="dptId" column="C_DPT_ID"/>
+			<result property="dptParentdptid" column="C_DPT_PARENTDPTID"/>
+			<result property="dptOrder" column="C_DPT_ORDER"/>
+			<result property="dptLocalext" column="C_DPT_LOCALEXT"/>
+			<result property="dptName" column="C_DPT_NAME"/>
+			<result property="dptHead" column="C_DPT_HEAD"/>
+			<result property="dptCmpId" column="C_DPT_CMP_ID"/>
+			<association property="emp" javaType="EmployeeVO">
+				<id property="empNo" column="C_EMP_NO"/>
+				<result property="empName" column="C_EMP_NAME"/>
+				<result property="empJobposition" column="C_EMP_JOBPOSITION"/>
+			</association>
+			<collection property="childDptList" javaType="list" ofType="DepartmentVO">
+				<id property="dptId" column="CC_DPT_ID"/>
+				<result property="dptParentdptid" column="CC_DPT_PARENTDPTID"/>
+				<result property="dptOrder" column="CC_DPT_ORDER"/>
+				<result property="dptLocalext" column="CC_DPT_LOCALEXT"/>
+				<result property="dptName" column="CC_DPT_NAME"/>
+				<result property="dptHead" column="CC_DPT_HEAD"/>
+				<result property="dptCmpId" column="CC_DPT_CMP_ID"/>
+				<association property="emp" javaType="EmployeeVO" autoMapping="false">
+					<id property="empNo" column="CC_EMP_NO"/>
+					<result property="empName" column="CC_EMP_NAME"/>
+					<result property="empJobposition" column="CC_EMP_JOBPOSITION"/>
+				</association>
+			</collection>
+		</collection>
+	</resultMap>
+	
+	
+	<select id="selectOne" resultType="DepartmentVO" parameterType="DepartmentVO">
+		select DPT_ID, DPT_NAME, DPT_PARENTDPTID, 
+				DPT_ORDER, DPT_LOCALEXT, DPT_HEAD, DPT_OFFICE
+		from DEPARTMENT
+		where DPT_ID = #{dptId} and DPT_CMP_ID = #{dptCmpId}
+	</select>
+	
+	<select id="selectList" resultType="DepartmentVO" parameterType="PaginationInfo">
+		SELECT
+		    DPT_ID
+		  , DPT_PARENTDPTID
+		  , DPT_ORDER
+		  , DPT_LOCALEXT
+		  , DPT_NAME
+		  , DPT_HEAD
+		  , DPT_OFFICE
+		  , DPT_CMP_ID
+		FROM
+		    DEPARTMENT
+	    <include refid="searchFrag"></include>
+	</select>
+	
+	<select id="selectTreeList" resultMap="DptTree" parameterType="PaginationInfo">
+		with department_cmp as(
+		select * from department where dpt_cmp_id=#{detailCondition.dptCmpId})
+		SELECT
+		     dpt.DPT_ID
+			  , dpt.DPT_PARENTDPTID
+			  , dpt.DPT_ORDER
+			  , dpt.DPT_LOCALEXT
+			  , dpt.DPT_NAME
+			  , dpt.DPT_HEAD
+			  , dpt.DPT_CMP_ID
+			  , c_dpt.DPT_ID as c_dpt_id
+			  , c_dpt.DPT_PARENTDPTID as c_DPT_PARENTDPTID
+			  , c_dpt.DPT_ORDER     as C_DPT_ORDER    
+			  , c_dpt.DPT_LOCALEXT  as C_DPT_LOCALEXT 
+			  , c_dpt.DPT_NAME      as C_DPT_NAME     
+			  , c_dpt.DPT_HEAD      as C_DPT_HEAD     
+			  , c_dpt.DPT_CMP_ID    as C_DPT_CMP_ID   
+			  , cc_dpt.DPT_ID           as CC_DPT_ID          
+			  , cc_dpt.DPT_PARENTDPTID  as CC_DPT_PARENTDPTID 
+			  , cc_dpt.DPT_ORDER        as CC_DPT_ORDER       
+			  , cc_dpt.DPT_LOCALEXT     as CC_DPT_LOCALEXT    
+			  , cc_dpt.DPT_NAME         as CC_DPT_NAME        
+			  , cc_dpt.DPT_HEAD         as CC_DPT_HEAD        
+			  , cc_dpt.DPT_CMP_ID       as CC_DPT_CMP_ID      
+		FROM department_cmp dpt
+		LEFT OUTER JOIN 
+		    department_cmp c_dpt
+		    ON (dpt.DPT_ID = c_dpt.DPT_PARENTDPTID)
+		LEFT OUTER JOIN 
+		    department_cmp cc_dpt
+		    ON (c_dpt.DPT_ID = cc_dpt.DPT_PARENTDPTID)
+		where dpt.dpt_parentdptid is null
+		ORDER BY dpt.DPT_ORDER
+	</select>
+	
+		<select id="selectLineTreeList" resultMap="lineTree" parameterType="PaginationInfo">
+		with department_cmp as(
+		select * from department where dpt_cmp_id=#{detailCondition.dptCmpId})
+		SELECT
+		     dpt.DPT_ID
+			  , dpt.DPT_PARENTDPTID
+			  , dpt.DPT_ORDER
+			  , dpt.DPT_LOCALEXT
+			  , dpt.DPT_NAME
+			  , dpt.DPT_HEAD
+			  , dpt.DPT_CMP_ID
+			  , dpt_emp.EMP_NO
+			  , dpt_emp.EMP_NAME
+			  , dpt_emp.EMP_JOBPOSITION
+			  , c_dpt.DPT_ID as c_dpt_id
+			  , c_dpt.DPT_PARENTDPTID as c_DPT_PARENTDPTID
+			  , c_dpt.DPT_ORDER     as C_DPT_ORDER    
+			  , c_dpt.DPT_LOCALEXT  as C_DPT_LOCALEXT 
+			  , c_dpt.DPT_NAME      as C_DPT_NAME     
+			  , c_dpt.DPT_HEAD      as C_DPT_HEAD     
+			  , c_dpt.DPT_CMP_ID    as C_DPT_CMP_ID  
+			  , c_dpt_emp.EMP_NO           as C_EMP_NO
+			  , c_dpt_emp.EMP_NAME         as C_EMP_NAME
+			  , c_dpt_emp.EMP_JOBPOSITION  as C_EMP_JOBPOSITION
+			  , cc_dpt.DPT_ID           as CC_DPT_ID          
+			  , cc_dpt.DPT_PARENTDPTID  as CC_DPT_PARENTDPTID 
+			  , cc_dpt.DPT_ORDER        as CC_DPT_ORDER       
+			  , cc_dpt.DPT_LOCALEXT     as CC_DPT_LOCALEXT    
+			  , cc_dpt.DPT_NAME         as CC_DPT_NAME        
+			  , cc_dpt.DPT_HEAD         as CC_DPT_HEAD        
+			  , cc_dpt.DPT_CMP_ID       as CC_DPT_CMP_ID    
+			  , cc_dpt_emp.EMP_NO          as CC_EMP_NO          
+			  , cc_dpt_emp.EMP_NAME        as CC_EMP_NAME        
+			  , cc_dpt_emp.EMP_JOBPOSITION as CC_EMP_JOBPOSITION  
+		FROM department_cmp dpt
+		INNER JOIN EMPLOYEE dpt_emp
+			ON (dpt.DPT_HEAD = dpt_emp.EMP_NO)
+		LEFT OUTER JOIN 
+		    department_cmp c_dpt
+		    ON (dpt.DPT_ID = c_dpt.DPT_PARENTDPTID)
+		INNER JOIN EMPLOYEE c_dpt_emp
+			ON (c_dpt.DPT_HEAD = c_dpt_emp.EMP_NO)
+		LEFT OUTER JOIN 
+		    department_cmp cc_dpt
+	    	ON (c_dpt.DPT_ID = cc_dpt.DPT_PARENTDPTID)
+	    INNER JOIN EMPLOYEE cc_dpt_emp
+			ON (cc_dpt.DPT_HEAD = cc_dpt_emp.EMP_NO)
+		where dpt.dpt_parentdptid is null
+		ORDER BY dpt.DPT_ORDER
+	</select>
+	
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.dptCmpId)">
+					AND DPT_CMP_ID = #{detailCondition.dptCmpId} 
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+
+
+	<insert id="insert" parameterType="DepartmentVO">
+		INSERT INTO department (
+    		DPT_ID,    DPT_PARENTDPTID,    DPT_ORDER,
+    		DPT_LOCALEXT,    DPT_NAME,    
+<!--     		DPT_HEAD, -->
+    		DPT_CMP_ID,    DPT_OFFICE
+		) VALUES (
+		   #{dptId, jdbcType=VARCHAR}
+		    , (SELECT DPT_ID FROM DEPARTMENT WHERE DPT_NAME=#{dptParentdptid} AND DPT_CMP_ID = #{dptCmpId} )
+		    , (SELECT NVL(MAX(DPT_ORDER), 0)+1 FROM DEPARTMENT WHERE DPT_PARENTDPTID = (SELECT DPT_ID FROM DEPARTMENT WHERE DPT_NAME= #{dptParentdptid} AND DPT_CMP_ID = #{dptCmpId} ) )
+		    , #{dptLocalext, jdbcType=VARCHAR}
+		    , #{dptName, jdbcType=VARCHAR}
+<!-- 		    , #{dptHead, jdbcType=VARCHAR} -->
+		    , #{dptCmpId, jdbcType=VARCHAR}
+		    , #{dptOffice, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="update" parameterType="DepartmentVO">
+		UPDATE DEPARTMENT
+		SET
+			DPT_NAME = #{dptName}
+			, dpt_parentdptid = #{dptParentdptid}
+			, dpt_Localext = #{dptLocalext}
+<!-- 			, dpt_head = #{dptHead} -->
+			, dpt_office = #{dptOffice}
+		WHERE
+			DPT_ID = #{dptId} and DPT_CMP_ID = #{dptCmpId}
+	</update>
+	
+	<delete id="delete" parameterType="map">
+		DELETE FROM DEPARTMENT
+		WHERE DPT_ID = #{dptId} and DPT_CMP_ID = #{dptCmpId}
+	</delete>
+	
+</mapper>

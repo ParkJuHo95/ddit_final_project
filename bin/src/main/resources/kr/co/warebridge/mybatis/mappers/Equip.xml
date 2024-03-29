@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.rental.dao.EquipDAO">
+	
+
+    <select id="selectEquipList" parameterType="EquipVO" resultType="EquipVO">
+      SELECT
+		    equip_code,
+		    equip_name,
+		    equip_detail,
+		    equip_able,
+		    emp_cmp_id
+		FROM
+		    equipment
+		order by equip_code   
+		
+    </select>
+    <select id="selectEquip" resultType="EquipVO" parameterType="String">
+    SELECT
+	    equip_code,
+	    equip_name,
+	    equip_detail,
+	    equip_able,
+	    emp_cmp_id
+	FROM
+	    equipment
+	 where 
+	 equip_code = #{equipCode}
+    </select>
+  
+	<delete id="deleteEquip" parameterType="String" >
+		 DELETE FROM equipment
+		WHERE
+        equip_code =  #{equipCode}
+	</delete>
+	
+	
+	<insert id="createEquip" parameterType="EquipVO">
+	<selectKey keyProperty="equipAble" resultType="string" order="BEFORE">
+	select '이용 가능' from dual
+	</selectKey>
+	INSERT INTO equipment (
+    equip_code,
+    equip_name,
+    equip_detail,
+    equip_able,
+    emp_cmp_id
+) VALUES (
+    #{equipCode},
+    #{equipName},
+    #{equipDetail},
+    #{equipAble},
+    'dreaminfosystem'
+)
+	</insert>
+	
+	<update id="updateEquip" parameterType="EquipVO" >
+	UPDATE equipment
+	SET
+	    equip_name = #{equipName},
+	    equip_detail= #{equipDetail},
+	    equip_able = #{equipAble}
+	WHERE
+	        equip_code =  #{equipCode}
+	</update>
+
+</mapper>

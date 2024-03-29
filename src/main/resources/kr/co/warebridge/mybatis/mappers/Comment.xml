@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.board.dao.CommentDAO">
+	
+	<resultMap type="CommentVO" id="comment" autoMapping="true">
+		<id property="cmtId" column="CMT_ID" />
+		<result property="cmtCbNo" column="CMT_CB_NO" />
+		<result property="cmtContent" column="CMT_CONTENT" />
+		<result property="cmtDat" column="CMT_DAT" />
+		<result property="cmtEmpNo" column="CMT_EMP_NO" />
+		<result property="empName" column="EMP_NAME" />
+	</resultMap>
+	
+	<insert id="insertComment" parameterType="CommentVO">
+		<selectKey keyProperty="cmtId" order="BEFORE" resultType="int">
+	        SELECT COMMENT_SEQ.NEXTVAL FROM DUAL
+	    </selectKey>
+		INSERT INTO "COMMENT" (
+		    CMT_ID
+		    , CMT_CB_NO
+		    , CMT_CONTENT
+		    , CMT_DAT
+		    , CMT_EMP_NO
+		) VALUES (
+			#{cmtId,jdbcType=NUMERIC}
+			, #{cmtCbNo,jdbcType=NUMERIC}
+			, #{cmtContent,jdbcType=VARCHAR}
+			, sysdate
+			, #{cmtEmpNo,jdbcType=VARCHAR}
+		)
+	</insert>
+	<select id="selectList" parameterType="int" resultMap="comment">
+		SELECT
+		    CMT_ID
+		  , CMT_CB_NO
+		  , CMT_CONTENT
+		  , CMT_DAT
+		  , CMT_EMP_NO
+		  , EMP_NAME
+		FROM "COMMENT" 
+		JOIN EMPLOYEE ON CMT_EMP_NO = EMP_NO
+		JOIN COMPANY_BOARD ON CMT_CB_NO = CB_NO
+		WHERE CMT_CB_NO = #{cmtCbNo }
+		ORDER BY CMT_DAT ,CMT_ID DESC
+	</select>
+	
+</mapper>

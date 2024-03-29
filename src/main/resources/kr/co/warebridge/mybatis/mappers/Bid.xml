@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.Bid.dao.BidDAO">
+
+	<select id="selectBidinfoList" resultType="BidinfoVO">
+		select *
+		from BIDINFO
+	</select>
+	
+	<resultMap type="BidrcmdVO" id="BidrcmdMap" autoMapping="true">
+		<id property="brRcmdymd" column="BR_RCMDYMD" />
+		<id property="brRank" column="BR_RANK" />
+		<id property="brCmpIndustry" column="BR_CMP_INDUSTRY" />
+		<id property="brCmpCptl" column="BR_CMP_CPTL" />
+		<association property="bidinfo" javaType="BidinfoVO" autoMapping="true"> 
+			<id property="biBidno" column="BI_BIDNO" />
+		</association>
+	</resultMap>
+	
+	<select id="selectBidrcmdList" parameterType="CompanyVO" resultMap="BidrcmdMap">
+		SELECT
+		    br_rcmdymd,
+		    br_bi_bidno,
+		    br_rank,
+		    bi_bidno,
+		    bi_bidname,
+		    TO_CHAR(bi_biddt, 'YYYY-MM-DD') AS bi_biddt, 
+		    bi_adagncs,
+		    bi_srvcclsfc,
+		    bi_url,
+		    bi_bidamout
+		FROM
+		    bidrcmd
+		   INNER JOIN bidinfo ON (br_bi_bidno=bi_bidno)
+		WHERE
+		    BR_CMP_INDUSTRY = #{cmpIndustry} and BR_CMP_CPTL =#{cmpCptl}
+	</select>
+	
+	<select id="selectCmpInfo" parameterType="String" resultType="CompanyVO">
+	SELECT 
+	    cmp_industry, 
+	    CASE 
+	        WHEN cmp_cptl &lt;= 500000000 THEN 0
+	        WHEN cmp_cptl &lt;= 1000000000 THEN 1
+	        WHEN cmp_cptl &lt;= 4000000000 THEN 2
+	        WHEN cmp_cptl &lt;= 15000000000 THEN 3
+	        ELSE 4
+	    END AS cmp_cptl
+	from company
+	    where cmp_id = #{cmpId}
+	</select>
+
+	<insert id="insertBidhstry" parameterType="BidhstryVO">
+		INSERT INTO bidhstry (
+		    bh_bi_bidno,
+		    bh_cmp_id,
+		    bh_emp_no,
+		    bh_cmp_industry,
+		    bh_cmp_cptl
+		) VALUES (
+		    #{bhBiBidno},
+		    #{bhCmpId},
+		    #{bhEmpNo},
+		    #{bhCmpIndustry},
+		    #{bhCmpCptl}
+		)
+	</insert>
+</mapper>

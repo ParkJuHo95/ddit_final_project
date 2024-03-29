@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.certificate.dao.CertificateDAO">
+	
+	<select id="selectCer" parameterType="EmployeeVO" resultType="map">
+		SELECT RANK, C.CER_NAME
+		FROM 
+		CER_RECOM A JOIN (
+		SELECT 
+		EMP_DPT_ID1 AS DPT_ID, 
+		CONCAT(SUBSTR(TRUNC(MONTHS_BETWEEN(SYSDATE,EMP_BIRTHDAY) /12 ), 1, LENGTH(TRUNC(MONTHS_BETWEEN(SYSDATE,EMP_BIRTHDAY) /12 )) - 1), '0') AS AGE
+		FROM EMPLOYEE
+		WHERE EMP_NO = #{empNo}) B ON (A.DPT_ID = B.DPT_ID AND A.AGE = B.AGE) join CERTIFICATE C ON 
+        (A.CER_NAME = C.CER_ID)
+	</select>
+	
+	<select id="checkDuplicaion" parameterType="String" resultType="map">
+		SELECT *
+		FROM
+		CERTIFICATE
+		WHERE CER_NAME = #{cer}
+	</select>
+
+	<insert id="insertCer" parameterType="String">
+		INSERT INTO CERTIFICATE
+		VALUES (CER_SEQ.nextval, #{cer})
+	</insert>
+	
+	<insert id="insertEmpCer" parameterType="EmployeeVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="cerId">
+			SELECT CER_ID
+			FROM
+			CERTIFICATE
+			WHERE CER_NAME = #{aa}
+		</selectKey>
+		INSERT INTO EMP_CER
+		VALUES (
+			#{bb.empNo},
+			#{bb.empCmpId},
+			#{cerId}
+		)
+	</insert>
+</mapper> 

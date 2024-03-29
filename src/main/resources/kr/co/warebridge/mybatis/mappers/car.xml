@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.rental.dao.CarDAO">
+
+	<select id="selectcarList" parameterType="CarVO" resultType="CarVO">
+		SELECT
+		car_code,
+		car_name,
+		car_detail,
+		car_able,
+		emp_cmp_id
+		FROM
+		car
+		where emp_cmp_id = #{empCmpId}
+		order by car_code
+		
+	</select>
+	
+	<select id="selectCar" resultType="CarVO" parameterType="String">
+		SELECT
+		car_code,
+		car_name,
+		car_detail,
+		car_able,
+		emp_cmp_id
+		FROM
+		car
+		where
+		car_code = #{carCode}
+	</select>
+
+	<delete id="deleteCar" parameterType="String">
+		DELETE FROM car
+		WHERE
+		car_code = #{carCode}
+	</delete>
+	
+	<insert id="createCar" parameterType="CarVO">
+	<selectKey keyProperty="carAble" resultType="string" order="BEFORE">
+	select '이용 가능' from dual
+	</selectKey>
+	INSERT INTO car (
+					    car_code,
+					    car_name,
+					    car_detail,
+					    car_able,
+					    emp_cmp_id
+					) VALUES (
+					    #{carCode},
+					    #{carName},
+				    	#{carDetail},
+					    #{carAble},
+					    #{empCmpId}
+					)
+	</insert>
+	
+	<update id="updateCar" parameterType="CarVO">
+			UPDATE car
+		SET
+		    car_name = #{carName},
+		    car_detail = #{carDetail},
+		    car_able = #{carAble}
+		WHERE
+		    car_code = #{carCode}
+	</update>
+
+</mapper>

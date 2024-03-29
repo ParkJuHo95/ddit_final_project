@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.bookrecom.dao.BookRecomDAO">
+	<select id="selectBookRecom" parameterType="EmployeeVO" resultType="map">
+		SELECT BR_RANK, BD_NAME, BD_AUTHOR, BD_YEAR
+		FROM BOOKRECOM 
+		JOIN (
+		        SELECT EMP_DPT_ID1, EMP_INTERESTS
+		        FROM EMPLOYEE
+		        WHERE EMP_NO = #{empNo}
+		)A  ON BR_DPT_ID = (SELECT DPT_LABEL FROM DEPARTMENT WHERE DPT_ID = A.EMP_DPT_ID1)
+		AND BR_EMP_INTEREST = EMP_INTERESTS
+		JOIN BOOKDATA ON BR_BD_ID = BD_ID
+	</select>
+	<select id="selectEmp" parameterType="EmployeeVO" resultType="map">
+		SELECT EMP_NAME
+		FROM EMPLOYEE
+	</select>
+</mapper>

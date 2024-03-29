@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.eworks.dao.SnctlineNdetailDAO">
+	
+	<resultMap type="SnctlineVO" id="SnctlineMap" autoMapping="true">
+	    <id property="slId" column="SL_ID"/>
+	    <collection property="snctdetails" javaType="List" ofType="SnctdetailVO" autoMapping="true">
+	        <id property="sdtOrder" column="SDT_ORDER"/>
+	        <id property="sdtSlId" column="SDT_SL_ID"/>
+	        <result property="sdtEmpNo" column="SDT_EMP_NO"/>
+	    </collection>
+	</resultMap>
+	
+	<select id="selectUsedSnctlines" resultMap="SnctlineMap">
+	    SELECT
+	        sl.sl_id AS SL_ID,
+	        sl.sl_cmp_id AS SL_CMP_ID,
+	        sl.sl_emp_no AS SL_EMP_NO,
+	        sl.sl_useyn AS SL_USEYN,
+	        sd.sdt_order AS SDT_ORDER,
+	        sd.sdt_sl_id AS SDT_SL_ID,
+	        sd.sdt_emp_no AS SDT_EMP_NO
+	    FROM
+	        snctline sl
+	        LEFT OUTER JOIN snctdetail sd ON sl.sl_id = sd.sdt_sl_id
+	    WHERE
+	        sl.sl_id = #{slId}
+	</select>
+
+	
+	<insert id="insertLine" parameterType="SnctlineVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="slId"> <!-- primaryKey를 생성해주는 쿼리, insert보다 먼저 실행한다-->
+			SELECT #{slCmpId}||#{slEmpNo}||LPAD(NVL(to_number(SUBSTR(MAX(SL_ID), LENGTH(#{slCmpId})+LENGTH(#{slEmpNo})+1)), 0) +1, 3, '0')
+			FROM snctline
+			WHERE SL_CMP_ID = #{slCmpId} AND SL_EMP_NO = #{slEmpNo}
+		</selectKey> 
+		INSERT INTO snctline (
+		    sl_id,
+		    sl_cmp_id,
+		    sl_emp_no,
+		    sl_useyn
+		) VALUES (
+		    #{slId, jdbcType=VARCHAR}
+		    , #{slCmpId, jdbcType=VARCHAR}
+		    , #{slEmpNo, jdbcType=VARCHAR}
+		    , 'Y'
+		)
+	</insert>
+	
+	<insert id="insertDetail" parameterType="SnctdetailVO">
+		INSERT INTO snctdetail (
+		    SDT_ORDER
+			, SDT_SL_ID
+			, SDT_EMP_NO
+		) VALUES (
+		    #{sdtOrder, jdbcType=NUMERIC}
+			, #{sdtSlId, jdbcType=VARCHAR}
+			, #{sdtEmpNo, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	
+</mapper>

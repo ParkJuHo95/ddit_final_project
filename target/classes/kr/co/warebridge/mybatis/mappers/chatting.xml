@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.chat.dao.ChatDAO">
+	
+	<select id="selectUserInRoom" parameterType="String" resultType="String">
+		SELECT
+		    CRJ_EMP_NO
+		FROM 
+		    CHAT_ROOM_JOIN
+		WHERE
+		    CRJ_CHAT_ROOM_NO = #{roomNo}
+	</select>
+	
+	<select id="selectChatRoomList" resultType="ChatRoomVO">
+		SELECT 
+			 CHAT_ROOM_NO
+			,TITLE
+			,CNT
+			,MY_TITLE
+		FROM 
+			CHAT_ROOM JOIN (
+				SELECT * 
+				FROM CHAT_ROOM_JOIN
+				WHERE CRJ_EMP_NO = #{empNo}
+			) ON (CHAT_ROOM_NO = CRJ_CHAT_ROOM_NO)
+	</select>
+	
+	<select id="selectChatRoomCnt" parameterType="ChatRoomVO" resultType="ChatRoomVO">
+		SELECT 
+			 C.CHAT_ROOM_NO
+			,C.CNT 
+		FROM 
+		CHAT_ROOM 
+			C,
+			( SELECT A.CRJ_CHAT_ROOM_NO FROM CHAT_ROOM_JOIN A JOIN (
+			SELECT * FROM CHAT_ROOM_JOIN WHERE CRJ_EMP_NO = #{openUser}) B ON (A.CRJ_CHAT_ROOM_NO = B.CRJ_CHAT_ROOM_NO)
+			WHERE A.CRJ_EMP_NO = #{targetUser}) D
+		WHERE 
+			C.CHAT_ROOM_NO = D.CRJ_CHAT_ROOM_NO
+	</select>
+	
+	<select id="selectAllEmp" parameterType="EmployeeVO" resultType="EmployeeVO">
+		SELECT
+		    emp_no,
+		    emp_cmp_id,
+		    emp_name,
+		    emp_picpath,
+		    emp_pass,
+		    emp_dpt_id1,
+		    emp_dpt_id2,
+		    emp_status,
+		    emp_role,
+		    emp_mobile,
+		    emp_hometelno,
+		    emp_cmptelno,
+		    emp_mail,
+		    emp_fax,
+		    emp_addr,
+		    emp_workingplace,
+		    emp_birthday,
+		    emp_remarks,
+		    emp_rrno,
+		    emp_jobduty,
+		    emp_jobposition,
+		    emp_jobrank,
+		    emp_gen,
+		    emp_interests
+		FROM
+		    employee
+		where
+		    emp_cmp_id = #{empCmpId} and emp_no != #{empNo}
+	</select>
+
+
+	<insert id="insertChatRoom" parameterType="ChatRoomVO">
+		<selectKey keyProperty="chatRoomNo" resultType="int" order="BEFORE">
+			SELECT SEQ_CR_NO.NEXTVAL FROM DUAL
+		</selectKey>
+		
+		INSERT INTO CHAT_ROOM (
+		    CHAT_ROOM_NO,
+		    TITLE,
+		    CNT
+		) VALUES (
+			 #{chatRoomNo,jdbcType=NUMERIC}
+			,#{title}
+			, '0'
+		)
+	</insert>
+	
+	<insert id="insertChatRoomJoin">
+		INSERT INTO CHAT_ROOM_JOIN (
+		    CRJ_EMP_NO,
+		    CRJ_CHAT_ROOM_NO,
+		    MY_TITLE
+		) VALUES (
+		    #{user},
+		    #{roomNo},
+		    #{myTitle}
+		)
+	</insert>
+	
+	<update id="updateChatRoomCntPlus" parameterType="String">
+		UPDATE 
+			chat_room
+		SET
+		    cnt = chat_room.cnt +1 
+		WHERE
+		     chat_room_no = #{chatRoomNo}
+	</update>
+	
+	<update id="updateChatRoomCntMinus" parameterType="String">
+		UPDATE 
+			chat_room
+		SET
+		    cnt = chat_room.cnt -1 
+		WHERE
+		     chat_room_no = #{chatRoomNo}
+	</update>
+	
+	<update id="updateChatRoomAdd">
+		INSERT INTO CHAT_ROOM_JOIN (
+		    CRJ_EMP_NO,
+		    CRJ_CHAT_ROOM_NO
+		) VALUES (
+		    #{user}
+		   ,#{roomNo}
+		)
+	</update>
+	
+	<update id="updateChatRoomSub">
+		DELETE 
+		FROM 
+			CHAT_ROOM_JOIN
+		WHERE
+	        CRJ_EMP_NO = #{user}
+		    AND CRJ_CHAT_ROOM_NO = #{roomNo}
+	</update>
+	
+	
+	
+	
+	<select id="selectMessages" parameterType="String" resultType="ChatMessageVO">
+		SELECT
+		    CM_CHAT_ROOM_NO,
+		    CREATE_DATE,
+		    CM_EMP_NO,
+		    CM_MESSAGE,
+		    EMP_NAME
+		FROM
+		    CHAT_MESSAGE JOIN EMPLOYEE ON (CM_EMP_NO = EMP_NO)
+		WHERE
+		    CM_CHAT_ROOM_NO = #{roomNo}
+		ORDER BY CREATE_DATE
+	</select>
+	
+	<insert id="insertMessages" parameterType="ChatMessageVO">
+		INSERT INTO CHAT_MESSAGE (
+		    CM_CHAT_ROOM_NO,
+		    CREATE_DATE,
+		    CM_EMP_NO,
+		    CM_MESSAGE,
+		    CM_LAST_CHECK
+		) VALUES (
+			 #{cmChatRoomNo}
+			,#{createDate}
+			,#{cmEmpNo}
+			,#{cmMessage}
+			,#{cmEmpNo}
+		)
+	</insert>
+	
+	<update id="updateMyTitle" parameterType="ChatRoomJoinVO">
+		UPDATE 
+			CHAT_ROOM_JOIN
+		SET
+		    MY_TITLE = #{myTitle}
+		WHERE
+	        CRJ_EMP_NO = #{crjEmpNo}
+		    AND CRJ_CHAT_ROOM_NO = #{crjChatRoomNo,jdbcType=NUMERIC}
+	</update>
+			
+	<delete id="deleteEmpFromRoom" parameterType="ChatRoomJoinVO">
+		DELETE 
+		FROM 
+			CHAT_ROOM_JOIN
+		WHERE
+		        CRJ_EMP_NO = #{crjEmpNo}
+		    AND CRJ_CHAT_ROOM_NO = #{crjChatRoomNo}
+	</delete>
+	
+	
+	<update id="updateLastCheck" parameterType="String">
+		UPDATE chat_message
+		SET
+		    CM_LAST_CHECK = CONCAT(CM_LAST_CHECK, ','||#{empNo})
+		WHERE
+		    CREATE_DATE = (
+		SELECT B.CREATE_DATE FROM(    
+		SELECT ROWNUM AS RNUM, A.*
+		FROM (
+		SELECT * 
+		FROM CHAT_MESSAGE
+		WHERE CM_CHAT_ROOM_NO = #{roomNo}
+		ORDER BY CREATE_DATE DESC) A) B
+		WHERE B.RNUM = '1'
+		)
+	</update>
+	
+	
+	<select id="roomTotalMessageCnt" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM CHAT_MESSAGE
+		WHERE CM_CHAT_ROOM_NO = #{roomNo}
+	</select>
+	
+	<select id="lastCheckMessageCnt" parameterType="String" resultType="Integer">
+		SELECT MAX(B.RNUM) FROM (
+		SELECT ROWNUM AS RNUM, A.* FROM(
+		SELECT * FROM CHAT_MESSAGE
+		WHERE CM_CHAT_ROOM_NO = #{roomNo}
+		ORDER BY CREATE_DATE ASC) A ) B
+		WHERE CM_LAST_CHECK LIKE '%'||#{empNo}||'%'
+	</select>
+</mapper>

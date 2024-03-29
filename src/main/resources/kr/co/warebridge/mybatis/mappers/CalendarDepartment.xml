@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.calendar.dao.CalendarDepartmentDAO">
+	<select id="selectDPT1Name" parameterType="EmployeeVO" resultType="String">
+		SELECT DPT_NAME
+		FROM DEPARTMENT
+		WHERE DPT_ID = #{empDptId1}
+	</select>
+	
+	<select id="selectDPT2Name" parameterType="EmployeeVO" resultType="String">
+		SELECT DPT_NAME
+		FROM DEPARTMENT
+		WHERE DPT_ID = #{empDptId2}
+	</select>
+
+</mapper>

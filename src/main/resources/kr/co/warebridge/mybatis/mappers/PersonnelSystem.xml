@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.admin.organization.dao.PersonnelSyetemDAO">
+
+	<select id="selectJobrankList" parameterType="String" resultType="PersonnelSystemVO">
+		select PRS_CODE, PRS_CLSCD, PRS_NAME
+		from PERSONNEL_SYSTEM
+		where PRS_CLSCD = 'A' and PRS_USEYN = 'Y'
+		and PRS_CMP_ID = #{prsCmpId}
+	</select>
+
+	<select id="selectJobrank" parameterType="String" resultType="PersonnelSystemVO">
+		select *
+		from PERSONNEL_SYSTEM
+		where PRS_CLSCD = 'A' and PRS_USEYN = 'Y'
+		and PRS_CODE = #{prsCode}
+		and PRS_CMP_ID = #{prsCmpId}
+	</select>
+	
+	<update id="updateJobrank" parameterType="PersonnelSystemVO">
+		update PERSONNEL_SYSTEM
+		set
+			PRS_NAME = #{prsName},
+			PRS_EMP_CHANGERID = #{prsEmpChangerid},
+			PRS_CHANGEDAT = CURRENT_TIMESTAMP
+		where 
+			PRS_CODE = #{prsCode}
+			and PRS_CLSCD = 'A'
+			and PRS_CMP_ID = #{prsCmpId}
+	</update>
+	
+	<delete id="deleteJobrank" parameterType="PersonnelSystemVO">
+		update PERSONNEL_SYSTEM
+		set
+			PRS_USEYN = 'N',
+			PRS_EMP_CHANGERID = #{prsEmpChangerid},
+			PRS_CHANGEDAT = CURRENT_TIMESTAMP
+		where 
+			PRS_CODE = #{prsCode}
+			and PRS_CLSCD = 'A'
+			and PRS_CMP_ID = #{prsCmpId}
+	</delete>
+	
+	<insert id="insertJobrank" parameterType="PersonnelSystemVO">
+		INSERT INTO personnel_system (
+		    prs_code,
+		    prs_cmp_id,
+		    prs_clscd,
+		    prs_name,
+		    prs_emp_registerid,
+		    prs_registdat,
+		    prs_emp_changerid,
+		    prs_changedat,
+		    prs_useyn
+		) VALUES (
+		    #{prsCode, jdbcType=VARCHAR}
+			, #{prsCmpId, jdbcType=VARCHAR}
+			, 'A'
+			, #{prsName, jdbcType=VARCHAR}
+			, #{prsEmpRegisterid, jdbcType=VARCHAR}
+			, CURRENT_TIMESTAMP
+			, #{prsEmpChangerid, jdbcType=VARCHAR}
+			, CURRENT_TIMESTAMP
+			, 'Y'
+		)
+	</insert>
+	
+	<select id="selectJobpositionList" resultType="PersonnelSystemVO" parameterType="String">
+		select PRS_CODE, PRS_CLSCD, PRS_NAME
+		from PERSONNEL_SYSTEM
+		where PRS_CLSCD = 'B' and PRS_USEYN = 'Y'
+		and PRS_CMP_ID = #{prsCmpId}
+	</select>
+
+	<select id="selectJobposition" parameterType="String" resultType="PersonnelSystemVO">
+		select *
+		from PERSONNEL_SYSTEM
+		where PRS_CLSCD = 'B' and PRS_USEYN = 'Y'
+		and PRS_CODE = #{prsCode} and PRS_CMP_ID = #{prsCmpId}
+	</select>
+	
+	<update id="updateJobposition" parameterType="PersonnelSystemVO">
+		update PERSONNEL_SYSTEM
+			set
+				PRS_NAME = #{prsName},
+				PRS_EMP_CHANGERID = #{prsEmpChangerid},
+				PRS_CHANGEDAT = CURRENT_TIMESTAMP
+		where 
+			PRS_CODE = #{prsCode}
+			and PRS_CLSCD = 'B' and PRS_CMP_ID = #{prsCmpId}
+	</update>
+	
+	<delete id="deleteJobposition" parameterType="PersonnelSystemVO">
+		update PERSONNEL_SYSTEM
+		set
+			PRS_USEYN = 'N',
+			PRS_EMP_CHANGERID = #{prsEmpChangerid},
+			PRS_CHANGEDAT = CURRENT_TIMESTAMP
+		where 
+			PRS_CODE = #{prsCode}
+			and PRS_CLSCD = 'B' and PRS_CMP_ID = #{prsCmpId}
+	</delete>
+	
+	<insert id="insertJobposition" parameterType="PersonnelSystemVO">
+		INSERT INTO personnel_system (
+		    prs_code,
+		    prs_cmp_id,
+		    prs_clscd,
+		    prs_name,
+		    prs_emp_registerid,
+		    prs_registdat,
+		    prs_emp_changerid,
+		    prs_changedat,
+		    prs_useyn
+		) VALUES (
+		    #{prsCode, jdbcType=VARCHAR}
+			, #{prsCmpId, jdbcType=VARCHAR}
+			, 'B'
+			, #{prsName, jdbcType=VARCHAR}
+			, #{prsEmpRegisterid, jdbcType=VARCHAR}
+			, CURRENT_TIMESTAMP
+			, #{prsEmpChangerid, jdbcType=VARCHAR}
+			, CURRENT_TIMESTAMP
+			, 'Y'
+		)
+	</insert>
+	
+</mapper>

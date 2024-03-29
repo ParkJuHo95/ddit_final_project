@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.alram.dao.AlramDAO">
+	<select id="selectAlrams" parameterType="String" resultType="AlramVO">
+		SELECT
+		    LINK,
+		    MESSAGE,
+		    ALRAM_NO
+		FROM
+		    ALRAM
+		WHERE 
+		    EMP_NO = #{empNo} AND READ = 'N'
+		ORDER BY TIME
+	</select>
+	
+	
+	<insert id="insertAlram" parameterType="AlramVO">
+		<selectKey order="BEFORE" resultType="String" keyProperty="alramNo">
+			SELECT
+				 ALRAM_SEQ.NEXTVAL
+			FROM
+				DUAL
+		</selectKey>
+		INSERT INTO ALRAM (
+		    EMP_NO,
+		    LINK,
+		    MESSAGE,
+		    ALRAM_NO
+		) VALUES (
+		    #{empNo},
+		    #{link},
+		    #{message},
+		    #{alramNo}
+		)
+	</insert>
+	
+	
+	<update id="updateAlram" parameterType="AlramVO">
+		UPDATE 
+			ALRAM
+		SET
+		    READ = 'Y'
+		WHERE
+		    ALRAM_NO = #{alramNo}
+	</update>
+</mapper>

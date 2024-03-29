@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.eworks.dao.SnctdocumentDAO">
+
+	<select id="selectNewForm" resultType="SnctformVO" parameterType="String">
+		SELECT
+		    sf_id,    sf_sfc_id,    sf_name,    sf_form,    sf_usearbityn,
+		    sf_publicyn,    sf_wrtrslctyn,    sf_usepresnctyn,    sf_emp_receiverid,
+		    sf_registdat,    sf_emp_registerid,    sf_changedat,    sf_emp_changerid,
+		    sf_useyn,    sf_cmp_id
+		FROM
+		    snctform
+		WHERE sf_id = #{sdcSfId}
+	
+	</select>
+	<resultMap type="SnctdocumentVO" id="SnctMap" autoMapping="true">
+		<id property="sdcId" column="SDC_ID"/>
+		<association property="snctform" javaType="SnctformVO" autoMapping="true">
+			<id property="sfId" column="SF_ID"/>
+		</association>
+		<association property="docWriter" javaType="EmployeeVO" autoMapping="true">
+			<id property="empNo" column="EMP_NO"/>
+			<association property="department" javaType="DepartmentVO" autoMapping="true">
+				<id property="dptId" column="DPT_ID"/>
+			</association>
+		</association>
+		<association property="snctline" javaType="SnctlineVO" autoMapping="true">
+			<id property="slId" column="SL_ID"/>
+			<collection property="snctdetails" javaType="list" ofType="SnctdetailVO" autoMapping="true">
+				<id property="sdtSlId" column="SDT_SL_ID"/>
+				<id property="sdtOrder" column="SDT_ORDER"/>
+				<association property="authorizer" javaType="EmployeeVO">
+					<id property="empNo" column="A_EMP_NO"/>
+					<result property="empName" column="A_EMP_NAME"/>
+					<result property="empDptId1" column="A_EMP_DPT_ID1"/>
+					<result property="empJobposition" column="A_EMP_JOBPOSITION"/>
+					<association property="department" javaType="DepartmentVO">
+						<id property="dptId" column="A_DPT_ID"/>
+						<result property="dptParentdptid" column="A_DPT_PARENTDPTID"/>
+						<result property="dptName" column="A_DPT_NAME"/>
+						<result property="dptHead" column="A_DPT_HEAD"/>
+					</association>
+				</association>
+				<association property="atrzstatus" javaType="SnctstatusVO">
+					<id property="ssSdcId" column="SS_SDC_ID"/>
+					<id property="ssSdtOrder" column="SS_SDT_ORDER" />
+					<result property="ssType" column="SS_TYPE_A"/>
+					<result property="ssSnctdat" column="SS_SNCTDAT"/> 
+					<result property="ssRemark" column="SS_REMARK" />
+					<result property="ssStatus" column="SS_STATUS" />
+				</association>
+			</collection>
+		</association>
+	</resultMap>
+	
+	<select id="selectOne" resultMap="SnctMap" parameterType="String">
+		WITH DETAIL AS (
+			SELECT
+			sl_id,    sl_cmp_id,    sl_emp_no,    sl_useyn
+			, sdt_order,    sdt_sl_id,    sdt_emp_no
+			, a.emp_no A_EMP_NO, a.emp_name A_EMP_NAME, a.emp_dpt_id1 A_EMP_DPT_ID1, a.emp_jobposition A_EMP_JOBPOSITION
+			, a.dpt_id A_DPT_ID, a.dpt_parentdptid A_DPT_PARENTDPTID, a.dpt_name A_DPT_NAME, a.dpt_head A_DPT_HEAD
+			FROM
+			snctline INNER JOIN snctdetail ON (sl_id = sdt_sl_id)
+			INNER JOIN employee a ON (sdt_emp_no = a.emp_no)
+			INNER JOIN department a ON (a.emp_dpt_id1 = a.dpt_id)
+		)
+		SELECT
+		    sdc_id,    sdc_sf_id,    sdc_sfc_id
+		    , sdc_title,    sdc_emp_no,    sdc_content
+		    , sdc_attchpath,    sdc_emrgcyyn
+		    , TO_CHAR(sdc_reportdat, 'YYYY-MM-DD HH24:MI') AS sdc_reportdat 
+		    , sdc_tempyn,    sdc_result,    sdc_docno
+		    , sdc_sl_id,    sdc_cmp_id
+		    , sf_id, sf_name, sf_usearbityn
+		    , sf_publicyn, sf_wrtrslctyn, sf_usepresnctyn
+		    , emp_no,  emp_name,  emp_dpt_id1,  emp_dpt_id2
+		    , dpt_id,    dpt_parentdptid,    dpt_order,    dpt_localext
+		    , dpt_name,    dpt_head
+		    , DETAIL.*
+		    , ss_sdc_id, ss_sdt_order, ss_emp_no
+		    , TO_CHAR(ss_snctdat, 'YYYY-MM-DD') AS ss_snctdat
+		    , ss_remark, ss_status
+		    , CASE ss_type
+                WHEN 'A' THEN '승인'
+                WHEN 'B' THEN '반려'
+                WHEN 'C' THEN '전결'
+                WHEN 'D' THEN '선결'
+                WHEN 'E' THEN '반려'
+                WHEN 'F' THEN '전결'
+                WHEN 'G' THEN '후결'
+                ELSE '결재대기'
+            END AS ss_type_a
+		FROM
+		    snctdocument
+		    INNER JOIN snctform ON ( sdc_sf_id = sf_id )
+		    INNER JOIN employee ON ( sdc_emp_no = emp_no)
+		    INNER JOIN department ON (emp_dpt_id1= dpt_id)
+		    LEFT OUTER JOIN DETAIL on (sdc_sl_id = DETAIL.sl_id)
+		    INNER JOIN snctstatus ON (sdc_id = ss_sdc_id) and (DETAIL.A_EMP_NO = ss_emp_no)
+		WHERE sdc_id = #{sdcId}
+		ORDER BY SS_SDT_ORDER ASC
+	</select>
+	
+	<insert id="insert" parameterType="SnctdocumentVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="sdcId"> <!-- primaryKey를 생성해주는 쿼리, insert보다 먼저 실행한다-->
+			SELECT #{sdcSfId}||LPAD(NVL(to_number(SUBSTR(MAX(SDC_ID), LENGTH(#{sdcSfId})+1)), 0) +1, 5, '0')
+			FROM snctdocument
+			WHERE SDC_SF_ID = #{sdcSfId}
+		</selectKey> 
+		INSERT INTO snctdocument (
+		    sdc_id,
+		    sdc_sf_id,
+		    sdc_sfc_id,
+		    sdc_title,
+		    sdc_emp_no,
+		    sdc_content,
+			<!-- sdc_attchpath, -->
+        	sdc_emrgcyyn,
+		    sdc_reportdat,
+		    sdc_tempyn,
+		    sdc_result,
+			sdc_sl_id,
+		    sdc_cmp_id
+		) VALUES (
+		    #{sdcId, jdbcType=VARCHAR}
+			, #{sdcSfId, jdbcType=VARCHAR}
+			, SUBSTR(#{sdcSfId}, 1, LENGTH(#{sdcSfId}) -3)
+			, #{sdcTitle, jdbcType=VARCHAR}
+			, #{sdcEmpNo, jdbcType=VARCHAR}
+			, #{sdcContent, jdbcType=VARCHAR}
+<!-- 		, #{sdcAttchpath, jdbcType=VARCHAR} -->
+			, #{sdcEmrgcyyn, jdbcType=CHAR}
+			, CURRENT_TIMESTAMP
+			, #{sdcTempyn, jdbcType=CHAR}
+			,<choose>
+			    <when test='sdcTempyn eq "Y"'>'0'</when>
+			    <otherwise>'1'</otherwise>
+			</choose>
+			, #{sdcSlId, jdbcType=VARCHAR}
+			, #{sdcCmpId, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 본인이 작성(상신/임시저장)한 문서 리스트 조회 -->
+	<select id="selectMyList" parameterType="PaginationInfo" resultMap="SnctMap">
+		SELECT
+		    sdc_id,    sdc_sf_id,    sdc_sfc_id
+		    , sdc_title,    sdc_emp_no
+		    , sdc_attchpath,    sdc_emrgcyyn
+		    , TO_CHAR(sdc_reportdat, 'YYYY-MM-DD HH24:MI') AS sdc_reportdat 
+		    , sdc_tempyn,    sdc_result,    sdc_docno
+		    , sdc_sl_id,    sdc_cmp_id
+		    , sf_id, sf_name, sf_usearbityn
+		    , sf_publicyn, sf_wrtrslctyn, sf_usepresnctyn
+		    , emp_no,  emp_name,  emp_dpt_id1,  emp_dpt_id2
+		FROM
+		    snctdocument
+		    INNER JOIN snctform ON ( sdc_sf_id = sf_id )
+		    INNER JOIN employee ON ( sdc_emp_no = emp_no)
+	<include refid="searchFrag"></include>
+		ORDER BY sdc_reportdat DESC
+	</select>
+	
+	<!-- 본인이 결재할 문서 리스트 조회 -->
+	<select id="selectWaitingList" parameterType="PaginationInfo" resultMap="SnctMap">
+		SELECT 
+			ss_emp_no, ss_sdc_id, ss_sdt_order, ss_type
+			, sdc_id,    sdc_sf_id,    sdc_sfc_id
+			, sdc_title,    sdc_emp_no
+			, sdc_attchpath,    sdc_emrgcyyn
+			, TO_CHAR(sdc_reportdat, 'YYYY-MM-DD HH24:MI') AS sdc_reportdat 
+			, sdc_tempyn,    sdc_result,    sdc_docno
+			, sdc_sl_id,    sdc_cmp_id
+			, sf_id, sf_name, sf_usearbityn
+			, sf_publicyn, sf_wrtrslctyn, sf_usepresnctyn
+			, emp_no,  emp_name,  emp_dpt_id1,  emp_dpt_id2
+			FROM snctstatus
+			INNER JOIN snctdocument ON (ss_sdc_id = sdc_id)
+			INNER JOIN snctform ON ( sdc_sf_id = sf_id )
+			INNER JOIN employee ON ( sdc_emp_no = emp_no)
+		<include refid="searchFrag"></include>
+		<if test="detailCondition.ssStatus &lt; 2">
+			ORDER BY sdc_reportdat ASC
+		</if>
+		<if test="detailCondition.ssStatus eq 2">
+			ORDER BY sdc_reportdat DESC
+		</if>
+	</select>
+	
+	<select id="selectWaitingListTotalRecord" parameterType="PaginationInfo">
+		select count(*)
+		from snctstatus
+	<include refid="searchFrag"></include>
+	</select>
+	
+	<select id="selectTotalRecord" parameterType="PaginationInfo">
+		select count(*)
+		from snctdocument
+		<include refid="searchFrag"></include>
+	</select>
+	
+	<update id="complete" parameterType="SnctdocumentVO">
+		<selectKey order="BEFORE" resultType="string" keyProperty="sdcDocno"> 
+			SELECT 
+			    SUBSTR(#{sdcId}, 1, LENGTH(#{sdcId}) - 13)||'-'||LPAD(NVL(to_number(SUBSTR(MAX(SDC_DOCNO), LENGTH(#{sdcId})-11)), 0) +1, 7, '0')
+			FROM 
+			    snctdocument
+			WHERE 
+			    SDC_CMP_ID = SUBSTR(#{sdcId}, 1, LENGTH(#{sdcId}) - 13)
+		</selectKey> 
+		UPDATE snctdocument
+		SET
+			sdc_result = #{sdcResult}
+   			, sdc_docno = #{sdcDocno}
+   		WHERE	
+   			sdc_id = #{sdcId}
+	</update>
+	
+	
+	<update id="reject" parameterType="SnctdocumentVO">
+		UPDATE snctdocument
+		SET
+			sdc_result = #{sdcResult}
+   		WHERE	
+   			sdc_id = #{sdcId}
+	</update>
+	
+	
+	<select id="selectAfter" resultType="SnctdocumentVO" parameterType="String">
+		SELECT
+			SDC_ID, SDC_TITLE, SDC_EMP_NO
+		FROM snctdocument
+		WHERE
+			sdc_id = #{sdcId}
+	</select>
+	<!-- searchFrag로 detailCondition 넣음, 회사명, 부서명으로 조회 가능 -->
+	<sql id="searchFrag">
+		<trim prefix="WHERE" prefixOverrides="AND">
+			<if test="not detailCondition.empty">
+				<!-- 임시보관함, 상신문서함 조회 시 사용 : sdcTempyn, sdcEmpNo-->
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.sdcTempyn)"> 
+					AND SDC_TEMPYN = #{detailCondition.sdcTempyn} 
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.sdcEmpNo)">
+					AND SDC_EMP_NO = #{detailCondition.sdcEmpNo}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.sdcResult)">
+					AND SDC_RESULT = #{detailCondition.sdcResult}
+				</if>
+				<!-- 수신문서함 조회 시 사용 : ssEmpNo, ssStaus -->
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.ssEmpNo)">
+					AND SS_EMP_NO = #{detailCondition.ssEmpNo}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.ssStatus)">
+					AND SS_STATUS = #{detailCondition.ssStatus}
+				</if>
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'sub'">
+						AND INSTR(SDC_TITLE, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'con'">
+						AND INSTR(SDC_CONTENT, #{simpleCondition.searchWord}) > 0
+					</when>
+				</choose>
+				</if>
+		</trim>
+	</sql>
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.rental.dao.BookDAO">
+
+<select id="selectBookList" parameterType="PaginationInfo" resultType="BookVO">
+      SELECT
+        book.book_code,
+        book.book_rental,
+        car.car_name AS carName,
+        room.room_name AS roomName,
+        equipment.equip_name AS equipName,
+        book.emp_no,
+        book.book_start,
+        book.book_end,
+        book.book_date,
+        book.emp_cmp_id,
+        book.book_detail
+    FROM
+        book
+    LEFT JOIN
+        car ON book.book_rental = car.car_code
+    LEFT JOIN
+        room ON book.book_rental = room.room_code
+    LEFT JOIN
+        equipment ON book.book_rental = equipment.equip_code
+    ORDER BY
+        book.book_code DESC
+</select>
+<select id="userBookList" parameterType="String" resultType="BookVO">
+    SELECT
+        book.book_code,
+        book.book_rental,
+        car.car_name AS carName,
+        room.room_name AS roomName,
+        equipment.equip_name AS equipName,
+        book.emp_no,
+        book.book_start,
+        book.book_end,
+        book.book_date,
+        book.emp_cmp_id,
+        book.book_detail
+    FROM
+        book
+    LEFT JOIN
+        car ON book.book_rental = car.car_code
+    LEFT JOIN
+        room ON book.book_rental = room.room_code
+    LEFT JOIN
+        equipment ON book.book_rental = equipment.equip_code
+    WHERE
+        book.emp_no = #{empNo}
+    ORDER BY
+        book.book_code DESC
+</select>
+<select id ="BookList" parameterType="String" resultType="BookVO">
+		SELECT
+            book_code,
+            book_rental,
+            emp_no,
+            book_start,
+            book_end,
+            TO_CHAR(book_date, 'YY-MM-DD HH24:MI') as book_date,
+            book_detail,
+            emp_cmp_id,
+            ROWNUM AS RNUM
+        FROM
+            book
+         Where book_rental = #{bookRental}
+</select>
+
+<select id="selectTotalRecord" resultType="int" parameterType="PaginationInfo">
+	SELECT COUNT(*)
+	FROM BOOK
+</select>
+
+<delete id="deleteBook" parameterType="String">
+DELETE FROM book
+WHERE
+book_code = #{bookCode}
+</delete>
+
+<update id="updateBook" parameterType="String" >
+	UPDATE book
+SET
+    book_detail = #{bookDetail}
+WHERE
+        book_code = #{bookCode}
+
+</update>
+
+<insert id="createBook" parameterType="BookVO">
+<selectKey resultType="string" keyProperty="bookCode" order="BEFORE">
+select BOOKNO_SEQ.NEXTVAL from dual 
+</selectKey>
+	INSERT INTO book (
+    book_code,
+    book_rental,
+    emp_no,
+    book_start,
+    book_end,
+    book_date,
+    book_detail
+) VALUES (
+    #{bookCode},
+    #{bookRental},
+    #{empNo},
+    #{bookStart},
+    #{bookEnd},
+     sysdate,
+    #{bookDetail}
+)
+</insert>	
+
+</mapper>

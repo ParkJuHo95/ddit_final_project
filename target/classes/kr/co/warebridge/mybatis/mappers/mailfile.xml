@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.warebridge.mail.dao.MailFileDAO">
+	<insert id="insertFile" parameterType="MailFileVO" >
+		INSERT INTO "FILE" (
+		    FILE_NAME,
+		    FILE_PATH,
+		    MAIL_CODE,
+		    FILE_OUTNAME
+		) VALUES (
+		    #{fileName},
+		    #{filePath},
+		    #{mailCode},
+		    #{fileOutname}
+		)
+	</insert>
+	
+	<select id="showFile">
+		select file_outname from "FILE" where file_name= #{fileName}
+	</select>
+</mapper>
